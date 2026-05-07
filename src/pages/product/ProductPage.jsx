@@ -18,8 +18,6 @@ const ProductManagement = () => {
   const [selectedLocationId, setSelectedLocationId] = useState('');
   const [locationPrice, setLocationPrice] = useState('');
   const [locationStock, setLocationStock] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   // Fetch all data on component mount
   useEffect(() => {
@@ -30,8 +28,8 @@ const ProductManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      // Fetch categories
-      const categoriesResponse = await categoriesAPI.getCategories();
+// Fetch categories
+       const categoriesResponse = await categoriesAPI.getCategories({ limit: 1000 });
       console.log('Categories API Response:', categoriesResponse);
     
       // Extract data from nested structure: response.data.data.data
@@ -43,8 +41,8 @@ const ProductManagement = () => {
       console.log('Processed Categories:', categoriesData);
       setCategories(categoriesData);
 
-      // Fetch subcategories
-      const subcategoriesResponse = await subcategoriesAPI.getSubcategories();
+// Fetch subcategories
+       const subcategoriesResponse = await subcategoriesAPI.getSubcategories({ limit: 1000 });
       console.log('Subcategories API Response:', subcategoriesResponse);
       
       // Extract data from nested structure: response.data.data.data
@@ -56,8 +54,8 @@ const ProductManagement = () => {
       console.log('Processed Subcategories:', subcategoriesData);
       setSubcategories(subcategoriesData);
 
-      // Fetch products
-      const productsResponse = await productsAPI.getProducts();
+// Fetch products
+       const productsResponse = await productsAPI.getProducts({ limit: 1000 });
       console.log('Products API Response:', productsResponse);
 
       // Extract data from nested structure: response.data.data.data
@@ -69,8 +67,8 @@ const ProductManagement = () => {
       console.log('Processed Products:', productsData);
       setProducts(productsData);
 
-      // Fetch locations
-      const locationsResponse = await locationsAPI.getAllLocations();
+// Fetch locations
+       const locationsResponse = await locationsAPI.getAllLocations({ limit: 1000 });
       console.log('Locations API Response:', locationsResponse);
 
       // Extract data from nested structure: response.data.data.data
@@ -191,17 +189,16 @@ const ProductManagement = () => {
     }
   ];
 
-  async function handleAdd(formData) {
-    try {
-      setLoading(true);
-      const response = await productsAPI.createProduct(formData);
-      console.log('Create Product Response:', response.data);
-      
-      // Refresh products list
-      await fetchAllData();
-      setCurrentPage(1);
-      setMode('view');
-    } catch (err) {
+async function handleAdd(formData) {
+     try {
+       setLoading(true);
+       const response = await productsAPI.createProduct(formData);
+       console.log('Create Product Response:', response.data);
+       
+       // Refresh products list
+       await fetchAllData();
+       setMode('view');
+     } catch (err) {
       console.error('Error creating product:', err);
       setError(err.message || 'Failed to create product');
     } finally {
@@ -252,18 +249,17 @@ const ProductManagement = () => {
     setMode('location');
   }
 
-  async function handleUpdate(formData, productId) {
-    try {
-      setLoading(true);
-      const response = await productsAPI.updateProduct(productId, formData);
-      console.log('Update Product Response:', response.data);
-      
-      // Refresh products list
-      await fetchAllData();
-      setCurrentPage(1);
-      setMode('view');
-      setEditingProduct(null);
-    } catch (err) {
+async function handleUpdate(formData, productId) {
+     try {
+       setLoading(true);
+       const response = await productsAPI.updateProduct(productId, formData);
+       console.log('Update Product Response:', response.data);
+       
+       // Refresh products list
+       await fetchAllData();
+       setMode('view');
+       setEditingProduct(null);
+     } catch (err) {
       console.error('Error updating product:', err);
       setError(err.message || 'Failed to update product');
     } finally {
@@ -299,10 +295,7 @@ const ProductManagement = () => {
     setLocationStock('');
   }
 
-  // Calculate stats - ensure products is always an array
   const productsArray = Array.isArray(products) ? products : [];
-  const totalPages = Math.ceil(productsArray.length / itemsPerPage);
-  const paginatedProducts = productsArray.slice((currentPage - 2) * itemsPerPage, currentPage * itemsPerPage);
   const totalValue = productsArray.reduce((sum, prod) => sum + (prod.generalPrice * prod.stockQuantity), 0);
   const lowStockCount = productsArray.filter(prod => prod.stockQuantity <= 10 && prod.stockQuantity > 0).length;
   const outOfStockCount = productsArray.filter(prod => prod.stockQuantity === 0).length;
@@ -528,49 +521,17 @@ const ProductManagement = () => {
               <p>Updating...</p>
             </div>
           ) : (
-            <Table
-              columns={columns}
-              data={paginatedProducts}
-              actions={actions}
-              emptyMessage="No rice products found. Add your first product to get started!"
-            />
+<Table
+               columns={columns}
+               data={productsArray}
+               actions={actions}
+               emptyMessage="No rice products found. Add your first product to get started!"
+             />
           )}
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex flex-col items-center mt-6 space-y-4">
-            <p className="text-sm text-gray-600">Page {currentPage} of {totalPages}</p>
-            <div className="flex justify-center items-center space-x-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-2 rounded ${currentPage === page ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+</div>
+       </div>
+     </div>
+   );
 };
 
 export default ProductManagement;

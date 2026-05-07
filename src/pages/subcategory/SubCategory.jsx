@@ -75,7 +75,7 @@ const SubCategoryManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await categoriesAPI.getCategories();
+      const response = await categoriesAPI.getCategories({ limit: 1000 });
       
       let categoriesData = [];
       if (response.data.data?.data && Array.isArray(response.data.data.data)) {
@@ -96,7 +96,7 @@ const SubCategoryManagement = () => {
   const fetchSubcategories = async () => {
     try {
       setLoading(true);
-      const response = await subcategoriesAPI.getSubcategories();
+      const response = await subcategoriesAPI.getSubcategories({ limit: 1000 });
       
       let subcategoriesData = [];
       if (response.data.data?.data && Array.isArray(response.data.data.data)) {
@@ -237,10 +237,11 @@ const SubCategoryManagement = () => {
     setEditingSubcategory(null);
   }
 
-  const handleRefresh = () => {
-    fetchCategories();
-    fetchSubcategories();
-  };
+const handleRefresh = () => {
+     subcategoriesLoaded.current = false;
+     fetchCategories();
+     fetchSubcategories();
+   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
