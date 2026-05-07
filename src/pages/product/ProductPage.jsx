@@ -267,17 +267,16 @@ async function handleUpdate(formData, productId) {
     }
   }
 
-  async function handleDelete(product) {
-    if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
-      try {
-        setLoading(true);
-        await productsAPI.deleteProduct(product._id);
-        console.log('Product deleted successfully');
-        
-        // Refresh products list
-        await fetchAllData();
-        setCurrentPage(1);
-      } catch (err) {
+async function handleDelete(product) {
+     if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
+       try {
+         setLoading(true);
+         await productsAPI.deleteProduct(product._id);
+         console.log('Product deleted successfully');
+         
+         // Refresh products list
+         await fetchAllData();
+       } catch (err) {
         console.error('Error deleting product:', err);
         setError(err.message || 'Failed to delete product');
       } finally {

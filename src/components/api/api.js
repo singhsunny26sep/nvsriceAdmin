@@ -106,6 +106,14 @@ export const usersAPI = {
   getUserStats: () => api.get('/users/stats'),
 };
 
+// Orders API endpoints
+export const ordersAPI = {
+  getOrders: (params) => api.get('/orders/getAll', { params }),
+  getOrderById: (id) => api.get(`/orders/get/${id}`),
+  updateOrder: (id, data) => api.put(`/orders/update/${id}`, data),
+  deleteOrder: (id) => api.delete(`/orders/delete/${id}`),
+};
+
 // Dashboard API endpoints
 export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
