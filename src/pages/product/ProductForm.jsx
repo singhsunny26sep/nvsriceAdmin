@@ -13,6 +13,7 @@ const ProductForm = ({
     description: product?.description || '',
     generalPrice: product?.generalPrice || '',
     stockQuantity: product?.stockQuantity || '',
+    categoryId: product?.categoryId || '',
     subcategoryId: product?.subCategoryId || product?.subcategoryId || '',
     weightInKg: product?.weightInKg || '',
     brand: product?.brand || ''
@@ -21,6 +22,8 @@ const ProductForm = ({
   const [imagePreview, setImagePreview] = useState(product?.image || '');
   const [imageFile, setImageFile] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
+  const [filteredSubcategories, setFilteredSubcategories] = useState([]);
+  const [uniqueCategories, setUniqueCategories] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const isEditing = !!product;
@@ -46,6 +49,10 @@ const ProductForm = ({
       
       console.log('Fetched subcategories:', subcategoriesData);
       setSubcategories(subcategoriesData);
+      
+      // Extract unique categories from subcategories
+      extractUniqueCategories(subcategoriesData);
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching subcategories:', error);
@@ -53,9 +60,66 @@ const ProductForm = ({
     }
   };
 
+  // Extract unique categories from subcategories
+  const extractUniqueCategories = (subcategoriesData) => {
+    const categoryMap = new Map();
+    
+    subcategoriesData.forEach(sub => {
+      let catId, catName;
+      
+      if (sub.category && typeof sub.category === 'object') {
+        catId = sub.category._id || sub.category.id;
+        catName = sub.category.name;
+      } else if (sub.categoryId) {
+        catId = sub.categoryId;
+        catName = sub.categoryName || `Category ${catId}`;
+      }
+      
+      if (catId && !categoryMap.has(catId)) {
+        categoryMap.set(catId, { id: catId, name: catName });
+      }
+    });
+    
+    const categories = Array.from(categoryMap.values());
+    console.log('Extracted unique categories:', categories);
+    setUniqueCategories(categories);
+  };
+
+  // Filter subcategories when category changes
+  useEffect(() => {
+    console.log('Filtering subcategories for categoryId:', formData.categoryId);
+    
+    if (Array.isArray(subcategories) && formData.categoryId) {
+      const filtered = subcategories.filter(sub => {
+        const match = 
+          sub.categoryId === formData.categoryId || 
+          sub.categoryId === parseInt(formData.categoryId) ||
+          sub.category === formData.categoryId ||
+          sub.category?._id === formData.categoryId ||
+          sub.category?.id === formData.categoryId;
+        
+        return match;
+      });
+      
+      console.log('Filtered subcategories:', filtered);
+      setFilteredSubcategories(filtered);
+    } else {
+      setFilteredSubcategories([]);
+    }
+  }, [subcategories, formData.categoryId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    
+    if (name === 'categoryId') {
+      setFormData({ 
+        ...formData, 
+        categoryId: value,
+        subcategoryId: '' // Reset subcategory when category changes
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleImageChange = (e) => {
@@ -96,7 +160,7 @@ const ProductForm = ({
       console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
     }
 
-    onSave(formDataToSend, isEditing ? product._id : null);
+    onSave(formDataToSend, isEditing ? product.id : null);
   };
 
   return (
@@ -108,7 +172,7 @@ const ProductForm = ({
       {loading ? (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading subcategories...</p>
+          <p className="text-gray-600">Loading categories...</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -144,25 +208,55 @@ const ProductForm = ({
             />
           </div>
 
+          {/* Category Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Category * (Found: {uniqueCategories.length})
+            </label>
+            <div className="relative">
+              <select
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none pr-10"
+                required
+              >
+                <option value="">Select a category</option>
+                {uniqueCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name || 'Unnamed Category'}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+            </div>
+            {uniqueCategories.length === 0 && (
+              <p className="text-xs text-red-500 mt-1">No categories loaded. Check console.</p>
+            )}
+          </div>
+
           {/* SubCategory Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Variety / SubCategory * (Found: {subcategories.length})
+              SubCategory * (Found: {filteredSubcategories.length})
             </label>
             <div className="relative">
               <select
                 name="subcategoryId"
                 value={formData.subcategoryId}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none pr-10"
+                disabled={!formData.categoryId || filteredSubcategories.length === 0}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none pr-10 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 required
               >
                 <option value="">
-                  {subcategories.length === 0 
-                    ? 'No subcategories available' 
-                    : 'Select a variety / subcategory'}
+                  {!formData.categoryId 
+                    ? 'Select a category first' 
+                    : filteredSubcategories.length === 0
+                    ? 'No subcategories available for this category'
+                    : 'Select a subcategory'}
                 </option>
-                {subcategories.map((subcategory) => {
+                {filteredSubcategories.map((subcategory) => {
                   const id = subcategory.id || subcategory._id;
                   return (
                     <option key={id} value={id}>
@@ -173,9 +267,6 @@ const ProductForm = ({
               </select>
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
             </div>
-            {subcategories.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">No subcategories loaded. Check console.</p>
-            )}
             {formData.subcategoryId && (
               <p className="text-xs text-gray-500 mt-1">
                 Selected ID: {formData.subcategoryId}
