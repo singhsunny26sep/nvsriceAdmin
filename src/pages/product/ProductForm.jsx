@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, ChevronDown } from 'lucide-react';
-import { subcategoriesAPI } from '../../components/api/api';
+import { subcategoriesAPI, categoriesAPI } from '../../components/api/api';
 
 const ProductForm = ({ 
   product = null, 
@@ -18,14 +18,15 @@ const ProductForm = ({
     weightInKg: product?.weightInKg || '',
     brand: product?.brand || ''
   });
-
+console.log(formData,"this is")
   const [imagePreview, setImagePreview] = useState(product?.image || '');
   const [imageFile, setImageFile] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
   const [filteredSubcategories, setFilteredSubcategories] = useState([]);
   const [uniqueCategories, setUniqueCategories] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-
+console.log(uniqueCategories,"$$$$$$$$$$$$$$$$$$$$$$$")
   const isEditing = !!product;
 
   // Fetch subcategories on component mount
@@ -36,53 +37,95 @@ const ProductForm = ({
   const fetchSubcategories = async () => {
     try {
       setLoading(true);
-      const response = await subcategoriesAPI.getSubcategories();
+      const [subResponse, catResponse] = await Promise.all([
+        subcategoriesAPI.getSubcategories(),
+        categoriesAPI.getCategories({ limit: 100 })
+      ]);
       
       let subcategoriesData = [];
-      if (response.data.data?.data && Array.isArray(response.data.data.data)) {
-        subcategoriesData = response.data.data.data;
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        subcategoriesData = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        subcategoriesData = response.data;
+      if (subResponse.data.data?.data && Array.isArray(subResponse.data.data.data)) {
+        subcategoriesData = subResponse.data.data.data;
+      } else if (subResponse.data.data && Array.isArray(subResponse.data.data)) {
+        subcategoriesData = subResponse.data.data;
+      } else if (Array.isArray(subResponse.data)) {
+        
+        subcategoriesData = subResponse.data;
+      }
+      
+      let categoriesData = [];
+      if (catResponse.data.data?.data && Array.isArray(catResponse.data.data.data)) {
+        categoriesData = catResponse.data.data.data;
+      } else if (catResponse.data.data && Array.isArray(catResponse.data.data)) {
+        categoriesData = catResponse.data.data;
+      } else if (Array.isArray(catResponse.data)) {
+        categoriesData = catResponse.data;
       }
       
       console.log('Fetched subcategories:', subcategoriesData);
+      console.log('Fetched categories:', categoriesData);
       setSubcategories(subcategoriesData);
+      setCategories(categoriesData);
       
-      // Extract unique categories from subcategories
-      extractUniqueCategories(subcategoriesData);
+      // Use all categories from the categories API directly
+      if (categoriesData && Array.isArray(categoriesData)) {
+        const allCategories = categoriesData.map(cat => ({
+          id: cat._id || cat.id,
+          name: cat.name || 'Unnamed Category'
+        }));
+        console.log('All categories:', allCategories);
+        setUniqueCategories(allCategories);
+      }
       
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching subcategories:', error);
+      console.error('Error fetching data:', error);
       setLoading(false);
     }
   };
 
-  // Extract unique categories from subcategories
-  const extractUniqueCategories = (subcategoriesData) => {
+// Extract unique categories from subcategories
+   const extractUniqueCategories = (subcategoriesData, categoriesData) => {
     const categoryMap = new Map();
+    const catNameMap = new Map();
+    
+    // Build a map of category ID to category name from categories API
+    if (categoriesData && Array.isArray(categoriesData)) {
+      categoriesData.forEach(cat => {
+        const catId = cat._id || cat.id;
+        if (catId) {
+          catNameMap.set(catId, cat.name);
+        }
+      });
+    }
     
     subcategoriesData.forEach(sub => {
       let catId, catName;
       
       if (sub.category && typeof sub.category === 'object') {
         catId = sub.category._id || sub.category.id;
-        catName = sub.category.name;
+        catName = sub.category.name || sub.categoryName || sub.category.title;
       } else if (sub.categoryId) {
         catId = sub.categoryId;
-        catName = sub.categoryName || `Category ${catId}`;
+        catName = sub.categoryName;
       }
       
-      if (catId && !categoryMap.has(catId)) {
-        categoryMap.set(catId, { id: catId, name: catName });
+      // Use category name from categories API if available, otherwise fallback
+      if (catId) {
+        if (!catName && catNameMap.has(catId)) {
+          catName = catNameMap.get(catId);
+        }
+        if (!catName) {
+          catName = `Category ${catId}`;
+        }
+        if (!categoryMap.has(catId)) {
+          categoryMap.set(catId, { id: catId, name: catName });
+        }
       }
     });
     
-    const categories = Array.from(categoryMap.values());
-    console.log('Extracted unique categories:', categories);
-    setUniqueCategories(categories);
+    const uniqueCategoriesList = Array.from(categoryMap.values());
+    console.log('Extracted unique categories:', uniqueCategoriesList);
+    setUniqueCategories(uniqueCategoriesList);
   };
 
   // Filter subcategories when category changes
@@ -224,7 +267,7 @@ const ProductForm = ({
                 <option value="">Select a category</option>
                 {uniqueCategories.map((category) => (
                   <option key={category.id} value={category.id}>
-                    {category.name || 'Unnamed Category'}
+                   {category.name}
                   </option>
                 ))}
               </select>
