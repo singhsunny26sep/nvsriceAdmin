@@ -3,7 +3,7 @@
 
 import Table from '../../components/models/Table';
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Eye, Package, TrendingUp, DollarSign, User, Phone, MapPin, Check, X, Clock, CheckCircle } from 'lucide-react';
+import { ShoppingBag, Eye, Package, TrendingUp, DollarSign, User, Phone, MapPin, Check, X, Clock, CheckCircle, Printer } from 'lucide-react';
 import { ordersAPI } from '../../components/api/api';
 
 // Order Details Modal Component
@@ -70,7 +70,7 @@ const OrderDetailsModal = ({ order, onClose, onConfirm, onCancel, onComplete, on
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-xs text-gray-600 mb-1">Total Amount</p>
-              <p className="text-lg font-bold text-green-600">₹{order.totalAmount.toFixed(2)}</p>
+              <p className="text-lg font-bold text-green-600">₹{(order.totalAmount || 0).toFixed(2)}</p>
             </div>
           </div>
 
@@ -125,8 +125,8 @@ const OrderDetailsModal = ({ order, onClose, onConfirm, onCancel, onComplete, on
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-green-600">₹{item.price.toFixed(2)}</p>
-                      <p className="text-sm text-gray-500">₹{item.price} each</p>
+                      <p className="font-bold text-green-600">₹{(item.price || 0).toFixed(2)}</p>
+                      <p className="text-sm text-gray-500">₹{item.price || 0} each</p>
                     </div>
                   </div>
                 ))
@@ -153,7 +153,7 @@ const OrderDetailsModal = ({ order, onClose, onConfirm, onCancel, onComplete, on
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Payment Method</span>
-                <span className="font-medium text-gray-800">{order.paymentMethod}</span>
+                <span className="font-medium text-gray-800">{order.paymentMethod || 'COD'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Payment Status</span>
@@ -167,7 +167,7 @@ const OrderDetailsModal = ({ order, onClose, onConfirm, onCancel, onComplete, on
               </div>
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-semibold text-gray-800">Total Amount</span>
-                <span className="font-bold text-green-600 text-lg">₹{order.totalAmount.toFixed(2)}</span>
+                <span className="font-bold text-green-600 text-lg">₹{(order.totalAmount || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -230,33 +230,34 @@ const OrderHistory = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
 
-  // Fetch orders from API
-  const fetchOrders = async () => {
-     setLoading(true);
-     try {
-       const response = await ordersAPI.getOrders({ limit: 1000 });
-if (response.data && response.data.success) {
-          let ordersData = [];
-          if (response.data.data?.data && Array.isArray(response.data.data.data)) {
-            ordersData = response.data.data.data;
-          } else if (Array.isArray(response.data.data)) {
-            ordersData = response.data.data;
-          } else if (Array.isArray(response.data)) {
-            ordersData = response.data;
-          }
-          setOrders(ordersData);
-        } else {
-         setOrders([]);
-       }
-       setError(null);
-     } catch (err) {
-       console.error('Error fetching orders:', err);
-       setError('Failed to load orders. Please try again.');
-       setOrders([]);
-     } finally {
-       setLoading(false);
-     }
-   };
+// Fetch orders from API
+   const fetchOrders = async () => {
+      setLoading(true);
+      try {
+        const response = await ordersAPI.getOrders({ limit: 1000 });
+        console.log('Orders API Response:', response);
+        
+        let ordersData = [];
+        // Handle various API response structures
+        if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
+          ordersData = response.data.data.data;
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          ordersData = response.data.data;
+        } else if (Array.isArray(response?.data)) {
+          ordersData = response.data;
+        } else if (Array.isArray(response)) {
+          ordersData = response;
+        }
+        setOrders(ordersData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('Failed to load orders. Please try again.');
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
    useEffect(() => {
      fetchOrders();
@@ -372,6 +373,12 @@ if (response.data && response.data.success) {
       onClick: handleViewDetails,
       className: 'text-blue-600 hover:text-blue-900 hover:bg-blue-100',
       title: 'View Details'
+    },
+    {
+      icon: <Printer size={16} />,
+      onClick: handlePrintInvoice,
+      className: 'text-green-600 hover:text-green-900 hover:bg-green-100',
+      title: 'Print Invoice'
     }
   ];
 
@@ -381,6 +388,102 @@ if (response.data && response.data.success) {
 
   function handleCloseModal() {
     setSelectedOrder(null);
+  }
+
+  // Print/Generate Invoice
+  function handlePrintInvoice(order) {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice - ${order.orderNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .invoice-header { border-bottom: 2px solid #10b981; padding-bottom: 10px; margin-bottom: 20px; }
+          .invoice-title { color: #10b981; font-size: 24px; font-weight: bold; }
+          .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 10px; color: #374151; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          .info-item { margin-bottom: 8px; }
+          .label { color: #6b7280; font-size: 12px; }
+          .value { color: #111827; font-weight: 500; }
+          .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          .items-table th, .items-table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+          .items-table th { background-color: #f3f4f6; }
+          .total-row { font-weight: bold; border-top: 2px solid #10b981; }
+          .print-btn { margin-top: 20px; background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+          @media print { .print-btn { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-header">
+          <div class="invoice-title">🍚 RICE DEAL - INVOICE</div>
+          <p>Order #${order.orderNumber} | ${order.orderDate}</p>
+        </div>
+        
+        <div class="section-title">Customer Information</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="label">Name</div>
+            <div class="value">${order.customerName || 'N/A'}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Phone</div>
+            <div class="value">${order.phone || 'N/A'}</div>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="label">Address</div>
+          <div class="value">${order.address || 'N/A'}</div>
+        </div>
+        
+        <div class="section-title">Order Items</div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${order.items && order.items.length > 0 ? order.items.map(item => `
+              <tr>
+                <td>${item.product?.name || 'Unknown'}</td>
+                <td>${item.quantity}</td>
+                <td>₹${(item.price || 0).toFixed(2)}</td>
+                <td>₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+              </tr>
+            `).join('') : '<tr><td colspan="4">No items</td></tr>'}
+            <tr class="total-row">
+              <td colspan="3">Total Amount</td>
+              <td>₹${(order.totalAmount || 0).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="section-title">Payment Details</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="label">Payment Method</div>
+            <div class="value">${order.paymentMethod || 'COD'}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Payment Status</div>
+            <div class="value">${order.paymentStatus || 'N/A'}</div>
+          </div>
+        </div>
+        
+        <button class="print-btn" onclick="window.print()">Print Invoice</button>
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
   }
 
 // Handle Confirm order
