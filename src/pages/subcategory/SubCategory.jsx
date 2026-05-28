@@ -1,82 +1,81 @@
 // ====== MAIN SUBCATEGORY MANAGEMENT COMPONENT ======
 
-import { useState, useEffect, useRef } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { SubCategoryForm } from './SubCategoryForm';
-import Table from '../../components/models/Table';
-import { categoriesAPI, subcategoriesAPI } from '../../components/api/api';
+import { useState, useEffect, useRef } from "react";
+import { Plus, Edit, Trash2 } from "lucide-react";
+import { SubCategoryForm } from "./SubCategoryForm";
+import Table from "../../components/models/Table";
+import { categoriesAPI, subcategoriesAPI } from "../../components/api/api";
 
 const SubCategoryManagement = () => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
-  const [mode, setMode] = useState('view');
+  const [mode, setMode] = useState("view");
   const [editingSubcategory, setEditingSubcategory] = useState(null);
   const subcategoriesLoaded = useRef(false);
 
   const columns = [
     {
-      key: 'id',
-      header: 'ID',
-      className: 'whitespace-nowrap font-medium text-green-600',
+      key: "id",
+      header: "ID",
+      className: "whitespace-nowrap font-medium text-green-600",
       render: (value, row) => {
-        const displayId = value || row._id || 'N/A';
+        const displayId = value || row._id || "N/A";
         return <span className="text-xs">{displayId.substring(0, 8)}...</span>;
-      }
+      },
     },
     {
-      key: 'image',
-      header: 'Image',
-      className: 'whitespace-nowrap',
+      key: "image",
+      header: "Image",
+      className: "whitespace-nowrap",
       render: (image, row) => (
         <img
-          src={image || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAxNUMyNSAxMi4yMzg2IDIyLjc2MTQgMTAgMjAgMTBDMTcuMjM4NiAxMCAxNSAxMi4yMzg2IDE1IDE1QzE1IDE3Ljc2MTQgMTcuNzYxNCAyMCAyMFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHN2Zy8+"}
+          src={
+            image ||
+            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAxNUMyNSAxMi4yMzg2IDIyLjc2MTQgMTAgMjAgMTBDMTcuMjM4NiAxMCAxNSAxMi4yMzg2IDE1IDE1QzE1IDE3Ljc2MTQgMTcuNzYxNCAyMCAyMFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHN2Zy8+"
+          }
           alt={row.name}
           className="rounded-full w-10 h-10 object-cover"
           onError={(e) => {
-            e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAxNUMyNSAxMi4yMzg2IDIyLjc2MTQgMTAgMjAgMTBDMTcuMjM4NiAxMCAxNSAxMi4yMzg2IDE1IDE1QzE1IDE3Ljc2MTQgMTcuNzYxNCAyMCAyMFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHN2Zy8+";
+            e.target.src =
+              "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAxNUMyNSAxMi4yMzg2IDIyLjc2MTQgMTAgMjAgMTBDMTcuMjM4NiAxMCAxNSAxMi4yMzg2IDE1IDE1QzE1IDE3Ljc2MTQgMTcuNzYxNCAyMCAyMFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHN2Zy8+";
             e.target.onError = null; // Prevent further error handling
           }}
         />
-      )
+      ),
     },
     {
-      key: 'name',
-      header: 'SubCategory Name',
-      className: 'whitespace-nowrap font-semibold uppercase'
+      key: "name",
+      header: "SubCategory Name",
+      className: "whitespace-nowrap font-semibold uppercase",
     },
     {
-      key: 'categoryName',
-      header: 'Category',
-      className: 'whitespace-nowrap text-blue-600 font-medium uppercase'
+      key: "description",
+      header: "Description",
+      className: "text-gray-600",
     },
-    {
-      key: 'description',
-      header: 'Description',
-      className: 'text-gray-600'
-    }
   ];
 
   const actions = [
     {
       icon: <Edit size={16} />,
       onClick: handleEdit,
-      className: 'text-green-600 hover:text-green-900 hover:bg-green-100',
-      title: 'Edit SubCategory'
+      className: "text-green-600 hover:text-green-900 hover:bg-green-100",
+      title: "Edit SubCategory",
     },
     {
       icon: <Trash2 size={16} />,
       onClick: handleDelete,
-      className: 'text-red-600 hover:text-red-900 hover:bg-red-100',
-      title: 'Delete SubCategory'
-    }
+      className: "text-red-600 hover:text-red-900 hover:bg-red-100",
+      title: "Delete SubCategory",
+    },
   ];
 
   const fetchCategories = async () => {
     try {
       const response = await categoriesAPI.getCategories({ limit: 1000 });
-      
+
       let categoriesData = [];
       if (response.data.data?.data && Array.isArray(response.data.data.data)) {
         categoriesData = response.data.data.data;
@@ -85,10 +84,10 @@ const SubCategoryManagement = () => {
       } else if (Array.isArray(response.data)) {
         categoriesData = response.data;
       }
-      
+
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
       setCategories([]);
     }
   };
@@ -97,7 +96,7 @@ const SubCategoryManagement = () => {
     try {
       setLoading(true);
       const response = await subcategoriesAPI.getSubcategories({ limit: 1000 });
-      
+
       let subcategoriesData = [];
       if (response.data.data?.data && Array.isArray(response.data.data.data)) {
         subcategoriesData = response.data.data.data;
@@ -106,24 +105,15 @@ const SubCategoryManagement = () => {
       } else if (Array.isArray(response.data)) {
         subcategoriesData = response.data;
       }
-      
-      const mappedSubcategories = subcategoriesData.map(sub => {
-        const category = categories.find(cat => 
-          cat.id === sub.categoryId || 
-          cat.id === sub.category_id ||
-          cat._id === sub.categoryId ||
-          cat._id === sub.category_id
-        );
-        return {
-          ...sub,
-          id: sub.id || sub._id,
-          categoryName: category ? category.name : 'Unknown'
-        };
-      });
-      
+
+      const mappedSubcategories = subcategoriesData.map((sub) => ({
+        ...sub,
+        id: sub.id || sub._id,
+      }));
+
       setSubcategories(mappedSubcategories);
     } catch (error) {
-      console.error('Error fetching subcategories:', error);
+      console.error("Error fetching subcategories:", error);
       setSubcategories([]);
     } finally {
       setLoading(false);
@@ -141,64 +131,69 @@ const SubCategoryManagement = () => {
     }
   }, [categories]);
 
-  // Handle add/update with FormData
-  async function handleAdd(formData, categoryId, subcategoryId = null) {
+async function handleAdd(formData, categoryId, subcategoryId = null) {
     try {
       setFormLoading(true);
-      
+
       if (!categoryId) {
-        alert('Please select a valid category');
+        alert("Please select a valid category");
         return;
       }
-      
-      console.log('Creating subcategory with categoryId:', categoryId);
-      
+
+      console.log("Creating subcategory with categoryId:", categoryId);
+
       let response;
       if (subcategoryId) {
         // Update existing subcategory
-        response = await subcategoriesAPI.updateSubcategory(subcategoryId, formData);
+        response = await subcategoriesAPI.updateSubcategory(
+          subcategoryId,
+          formData,
+        );
       } else {
         // Create new subcategory
-        response = await subcategoriesAPI.createSubcategory(categoryId, formData);
+        response = await subcategoriesAPI.createSubcategory(
+          categoryId,
+          formData,
+        );
       }
-      
-      const newSubcategory = response.data.data || response.data;
-      const category = categories.find(cat => 
-        cat.id === newSubcategory.categoryId || 
-        cat.id === newSubcategory.category_id ||
-        cat._id === newSubcategory.categoryId ||
-        cat._id === newSubcategory.category_id ||
-        cat._id === categoryId
-      );
-      
+
+      // Extract the new/updated subcategory from response
+      const newSubcategory = response?.data?.data || response?.data || {};
+
       if (subcategoryId) {
         // Update in list
-        setSubcategories(subcategories.map(sub => 
-          (sub.id || sub._id) === subcategoryId ? {
-            ...newSubcategory,
-            id: newSubcategory.id || newSubcategory._id,
-            categoryName: category ? category.name : 'Unknown'
-          } : sub
-        ));
-        alert('SubCategory updated successfully!');
+        setSubcategories(
+          subcategories.map((sub) =>
+            (sub.id || sub._id) === subcategoryId
+              ? {
+                  ...newSubcategory,
+                  id: newSubcategory.id || newSubcategory._id,
+                }
+              : sub,
+          ),
+        );
+        alert("SubCategory updated successfully!");
       } else {
         // Add to list
-        setSubcategories([...subcategories, {
-          ...newSubcategory,
-          id: newSubcategory.id || newSubcategory._id,
-          categoryName: category ? category.name : 'Unknown'
-        }]);
-        alert('SubCategory created successfully!');
+        setSubcategories([
+          ...subcategories,
+          {
+            ...newSubcategory,
+            id: newSubcategory.id || newSubcategory._id,
+          },
+        ]);
+        alert("SubCategory created successfully!");
       }
-      
-      setMode('view');
+
+      setMode("view");
       setEditingSubcategory(null);
     } catch (error) {
-      console.error('Error saving subcategory:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message ||
-                          'Failed to save subcategory';
+      console.error("Error saving subcategory:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to save subcategory";
       alert(errorMessage);
     } finally {
       setFormLoading(false);
@@ -207,41 +202,44 @@ const SubCategoryManagement = () => {
 
   function handleEdit(subcategory) {
     setEditingSubcategory(subcategory);
-    setMode('edit');
+    setMode("edit");
   }
 
   async function handleDelete(subcategory) {
-    if (!window.confirm(`Are you sure you want to delete "${subcategory.name}"?`)) {
+    if (
+      !window.confirm(`Are you sure you want to delete "${subcategory.name}"?`)
+    ) {
       return;
     }
 
     try {
       const subId = subcategory.id || subcategory._id;
       await subcategoriesAPI.deleteSubcategory(subId);
-      
-      setSubcategories(subcategories.filter(sub => 
-        (sub.id || sub._id) !== subId
-      ));
-      alert('SubCategory deleted successfully!');
+
+      setSubcategories(
+        subcategories.filter((sub) => (sub.id || sub._id) !== subId),
+      );
+      alert("SubCategory deleted successfully!");
     } catch (error) {
-      console.error('Error deleting subcategory:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          'Failed to delete subcategory';
+      console.error("Error deleting subcategory:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to delete subcategory";
       alert(errorMessage);
     }
   }
 
   function handleCancel() {
-    setMode('view');
+    setMode("view");
     setEditingSubcategory(null);
   }
 
-const handleRefresh = () => {
-     subcategoriesLoaded.current = false;
-     fetchCategories();
-     fetchSubcategories();
-   };
+  const handleRefresh = () => {
+    subcategoriesLoaded.current = false;
+    fetchCategories();
+    fetchSubcategories();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -262,13 +260,13 @@ const handleRefresh = () => {
               disabled={loading}
               className="px-4 py-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors disabled:opacity-50"
             >
-              {loading ? 'Loading...' : 'Refresh'}
+              {loading ? "Loading..." : "Refresh"}
             </button>
           </div>
         </div>
 
         {/* Add Form Modal */}
-        {mode === 'add' && (
+        {mode === "add" && (
           <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="w-full max-w-md">
               <SubCategoryForm
@@ -283,7 +281,7 @@ const handleRefresh = () => {
         )}
 
         {/* Edit Form Modal */}
-        {mode === 'edit' && editingSubcategory && (
+        {mode === "edit" && editingSubcategory && (
           <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="w-full max-w-md">
               <SubCategoryForm
@@ -299,10 +297,10 @@ const handleRefresh = () => {
         )}
 
         {/* Add Button */}
-        {mode === 'view' && (
+        {mode === "view" && (
           <div className="mb-6">
             <button
-              onClick={() => setMode('add')}
+              onClick={() => setMode("add")}
               disabled={categories.length === 0}
               className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 shadow-md hover:shadow-lg transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
             >

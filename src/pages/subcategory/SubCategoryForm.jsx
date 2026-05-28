@@ -82,6 +82,12 @@ export const SubCategoryForm = ({
       return;
     }
     
+    // Require image for new subcategories
+    if (!isEditing && !imageFile) {
+      alert('Please select an image');
+      return;
+    }
+    
     // Create FormData object (same as Postman)
     const submitData = new FormData();
     submitData.append('name', formData.name.trim());

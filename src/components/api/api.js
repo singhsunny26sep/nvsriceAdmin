@@ -8,10 +8,6 @@ const BASE_URL =  'https://nvs-rice-mart.onrender.com/nvs-rice-mart/';
 // Create axios instance with default configuration
 export const api = axios.create({
   baseURL: BASE_URL,
-  // timeout: 10000,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
 });
 
 // Request interceptor to add token to headers
@@ -68,15 +64,11 @@ export const subcategoriesAPI = {
   
   // FIXED: Now uses axios instance with proper BASE_URL
   createSubcategory: (categoryId, formData) => {
-    return api.post(`/subCategories/${categoryId}/create`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.post(`/subCategories/${categoryId}/create`, formData);
   },
   
   updateSubcategory: (id, formData) => {
-    return api.put(`/subCategories/update/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.put(`/subCategories/update/${id}`, formData);
   },
   
   deleteSubcategory: (id) => api.delete(`/subCategories/delete/${id}`),
@@ -177,17 +169,13 @@ export const fileAPI = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
-    return api.post('/files/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.post('/files/upload', formData);
   },
   uploadMultiple: (files, folder = 'uploads') => {
     const formData = new FormData();
     files.forEach(file => formData.append('files', file));
     formData.append('folder', folder);
-    return api.post('/files/upload-multiple', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.post('/files/upload-multiple', formData);
   },
   deleteFile: (fileId) => api.delete(`/files/${fileId}`),
 };
@@ -199,15 +187,11 @@ export const bannersAPI = {
   getBannerById: (id) => api.get(`/banners/get/${id}`),
   
   createBanner: (formData) => {
-    return api.post('/banners/create', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.post('/banners/create', formData);
   },
   
   updateBanner: (id, formData) => {
-    return api.put(`/banners/update/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.put(`/banners/update/${id}`, formData);
   },
   
   deleteBanner: (id) => api.delete(`/banners/delete/${id}`)

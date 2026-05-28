@@ -85,6 +85,14 @@ const BannerForm = ({ banner, onSave, onCancel, title = "Edit Banner" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    
+    // Require image for new banners
+    if (!banner && !image) {
+      alert('Please select a banner image');
+      return;
+    }
+    
     setIsSubmitting(true);
   
     try {
@@ -376,21 +384,36 @@ const Banner = () => {
       console.log('Creating banner...');
       const response = await bannersAPI.createBanner(formData);
       console.log('CREATE Response:', response);
-      
-      if (response?.success || response?.data?.success) {
-        const newBanner = response.banner || response.data?.banner || response.data;
-        
-        if (newBanner) {
+
+      // Check for successful response - axios wraps response in data property
+      const isSuccess = response?.data?.success === true || response?.status === 200 || response?.status === 201;
+
+      if (isSuccess) {
+        const newBanner = response?.data?.banner || response?.data?.data || response?.data;
+
+        if (newBanner && typeof newBanner === 'object') {
           setBanners(prev => [...prev, newBanner]);
-          setMode('view');
-          alert(response.message || response.data?.message || 'Banner created successfully!');
         } else {
           await fetchBanners();
-          setMode('view');
-          alert('Banner created successfully!');
         }
+        setMode('view');
+        alert(response?.data?.message || response?.data?.data?.message || 'Banner created successfully!');
+      } else if (response?.data?.success === false) {
+        throw new Error(response?.data?.message || response?.data?.data?.message || 'Failed to create banner');
       } else {
-        throw new Error(response?.message || response?.data?.message || 'Failed to create banner');
+        // Assume success if we got a 2xx response without explicit success flag
+        if (response?.status >= 200 && response?.status < 300) {
+          const newBanner = response?.data?.banner || response?.data?.data || response?.data;
+          if (newBanner && typeof newBanner === 'object') {
+            setBanners(prev => [...prev, newBanner]);
+          } else {
+            await fetchBanners();
+          }
+          setMode('view');
+          alert(response?.data?.message || response?.data?.data?.message || 'Banner created successfully!');
+        } else {
+          throw new Error('Unexpected response from server');
+        }
       }
     } catch (error) {
       console.error('Error creating banner:', error);
@@ -405,12 +428,14 @@ const Banner = () => {
       const response = await bannersAPI.updateBanner(bannerId, formData);
       console.log('UPDATE Response:', response);
       
-      if (response?.success || response?.data?.success) {
-        const updatedBanner = response.banner || response.data?.banner || response.data;
+      const isSuccess = response?.data?.success === true || response?.status === 200 || response?.status === 201;
+      
+      if (isSuccess || (response?.status >= 200 && response?.status < 300)) {
+        const updatedBanner = response?.data?.banner || response?.data?.data || response?.data;
         
-        if (updatedBanner && updatedBanner._id) {
+        if (updatedBanner && typeof updatedBanner === 'object' && (updatedBanner._id || updatedBanner.id)) {
           setBanners(prev => 
-            prev.map(b => b._id === bannerId ? updatedBanner : b)
+            prev.map(b => (b._id === bannerId || b.id === bannerId) ? updatedBanner : b)
           );
         } else {
           await fetchBanners();
@@ -418,9 +443,11 @@ const Banner = () => {
         
         setMode('view');
         setEditingBanner(null);
-        alert(response.message || response.data?.message || 'Banner updated successfully!');
+        alert(response?.data?.message || response?.data?.data?.message || 'Banner updated successfully!');
+      } else if (response?.data?.success === false) {
+        throw new Error(response?.data?.message || response?.data?.data?.message || 'Failed to update banner');
       } else {
-        throw new Error(response?.message || response?.data?.message || 'Failed to update banner');
+        throw new Error('Unexpected response from server');
       }
     } catch (error) {
       console.error('Error updating banner:', error);
@@ -440,11 +467,13 @@ const Banner = () => {
         const response = await bannersAPI.deleteBanner(banner._id);
         console.log('DELETE Response:', response);
         
-        if (response?.success || response?.data?.success) {
+        const isSuccess = response?.data?.success || response?.status === 200;
+        
+        if (isSuccess) {
           setBanners(prev => prev.filter(b => b._id !== banner._id));
-          alert(response.message || response.data?.message || 'Banner deleted successfully!');
+          alert(response.data?.message || response.data?.data?.message || 'Banner deleted successfully!');
         } else {
-          throw new Error(response?.message || response?.data?.message || 'Failed to delete banner');
+          throw new Error(response?.data?.message || response?.data?.data?.message || 'Failed to delete banner');
         }
       } catch (error) {
         console.error('Error deleting banner:', error);
