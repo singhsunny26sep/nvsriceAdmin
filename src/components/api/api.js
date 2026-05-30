@@ -90,7 +90,7 @@ export const productsAPI = {
 
 // Users API endpoints
 export const usersAPI = {
-  getUsers: (params) => api.get('/users/get', { params }),
+  getUsers: (params) => api.get('/users/getAll', {  }),
   getUserById: (id) => api.get(`/users/${id}`),
   createUser: (userData) => api.post('/users', userData),
   updateUser: (id, userData) => api.put(`/users/${id}`, userData),

@@ -16,60 +16,79 @@ const UsersPage = () => {
     fetchUsers();
   }, [currentPage, searchTerm, filterStatus]);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await usersAPI.getUsers({
-        page: currentPage,
-        limit: 10,
-        search: searchTerm,
-        status: filterStatus === 'all' ? undefined : filterStatus
-      });
-      
-      // Handle the actual API response structure
-      let usersData = [];
-      if (response.data.success && response.data.data) {
-        // Single user response
-        if (response.data.data._id) {
-          usersData = [response.data.data];
-        }
-        // Array of users
-        else if (Array.isArray(response.data.data)) {
-          usersData = response.data.data;
-        }
-      } else if (response.data.users) {
-        usersData = response.data.users;
-      } else if (Array.isArray(response.data)) {
-        usersData = response.data;
-      }
-      
-      // Map API response to component format
-      const mappedUsers = usersData.map(user => ({
-        id: user._id || user.id,
-        name: user.name || 'N/A',
-        email: user.email || 'N/A',
-        phone: user.mobile || user.phone || 'N/A',
-        status: user.isActive ? 'active' : user.isDeleted ? 'deleted' : 'inactive',
-        role: user.role || 'user',
-        createdAt: user.createdAt,
-        isEmailVerified: user.isEmailVerified,
-        isMobileVerified: user.isMobileVerified,
-        isOnline: user.isOnline,
-        loginType: user.loginType,
-        lastActivity: user.lastActivity
-      }));
-      
-      setUsers(mappedUsers);
-      setTotalPages(response.data.totalPages || 1);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-      alert('Failed to load users. Please try again.');
-      setUsers([]);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  };
+   const fetchUsers = async () => {
+     try {
+       setLoading(true);
+       const response = await usersAPI.getUsers({
+         page: currentPage,
+         limit: 10,
+         search: searchTerm,
+         status: filterStatus === 'all' ? undefined : filterStatus
+       });
+       
+       // Handle the actual API response structure
+       let usersData = [];
+       let total = 0;
+       let totalPages = 1;
+       
+       if (response.data.success) {
+         // Handle paginated response: { data: { total, totalPages, page, limit, data: [...] } }
+         if (response.data.data && response.data.data.data && Array.isArray(response.data.data.data)) {
+           usersData = response.data.data.data;
+           total = response.data.data.total || 0;
+           totalPages = response.data.data.totalPages || 1;
+         }
+         // Handle direct array response: { data: [...] }
+         else if (Array.isArray(response.data.data)) {
+           usersData = response.data.data;
+           total = usersData.length;
+           totalPages = 1;
+         }
+         // Handle single user response: { data: { _id, ... } }
+         else if (response.data.data && response.data.data._id) {
+           usersData = [response.data.data];
+           total = 1;
+           totalPages = 1;
+         }
+         // Handle alternative response formats
+         else if (response.data.users) {
+           usersData = response.data.users;
+           total = usersData.length;
+           totalPages = 1;
+         } else if (Array.isArray(response.data)) {
+           usersData = response.data;
+           total = usersData.length;
+           totalPages = 1;
+         }
+       }
+       
+       // Map API response to component format
+       const mappedUsers = usersData.map(user => ({
+         id: user._id || user.id,
+         name: user.name || 'N/A',
+         email: user.email || 'N/A',
+         phone: user.mobile || user.phone || 'N/A',
+         status: user.isActive ? 'active' : user.isDeleted ? 'deleted' : 'inactive',
+         role: user.role || 'user',
+         createdAt: user.createdAt,
+         isEmailVerified: user.isEmailVerified,
+         isMobileVerified: user.isMobileVerified,
+         isOnline: user.isOnline,
+         loginType: user.loginType,
+         lastActivity: user.lastActivity
+       }));
+       
+       setUsers(mappedUsers);
+       setTotalPages(totalPages);
+     } catch (error) {
+       console.error('Failed to fetch users:', error);
+       alert('Failed to load users. Please try again.');
+       setUsers([]);
+       setTotalPages(1);
+     } finally {
+       setLoading(false);
+     }
+   };
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
