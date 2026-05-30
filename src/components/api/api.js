@@ -3,7 +3,7 @@ import axios from 'axios';
 // Base API URL - replace with your actual API endpoint
 // const BASE_URL =  'https://api.fixsetadmin.com/v1';
 // const BASE_URL =  'http://localhost:5000/';
-const BASE_URL =  'https://nvs-rice-mart.onrender.com/nvs-rice-mart/';
+const BASE_URL =  'https://api.nvsricemart.com/nvs-rice-mart/';
 
 // Create axios instance with default configuration
 export const api = axios.create({
