@@ -147,7 +147,7 @@ export const notificationsAPI = {
 
 // Settings API endpoints
 export const settingsAPI = {
-  getSettings: () => api.get('/settings'),
+  getSettings: () => api.get('/settings/getAll'),
   createSettings: (settingsData) => api.post('/settings/create', settingsData, {
     headers: { 'Content-Type': 'application/json' }
   }),
@@ -211,7 +211,7 @@ export const locationsAPI = {
       }
     }
   ),
-  getAllLocations: () => api.get('/locations/getAll'),
+  getAllLocations: () => api.get('/locations/getAll?isProductAddress=true'),
   getLocationById: (id) => api.get(`/locations/${id}`),
   updateLocation: (id, locationData) => api.put(`/locations/${id}`, locationData,
      { 

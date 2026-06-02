@@ -19,6 +19,7 @@ const SettingsPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchSettings();
@@ -27,6 +28,7 @@ const SettingsPage = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await settingsAPI.getSettings();
       const settingsData = response?.data?.data?.data || response?.data?.data || response?.data;
       
@@ -35,6 +37,7 @@ const SettingsPage = () => {
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
+      setError('Failed to load settings');
     } finally {
       setLoading(false);
     }
@@ -53,11 +56,13 @@ const SettingsPage = () => {
   const handleSave = async () => {
     try {
       setSaveLoading(true);
+      setError(null);
       const response = await settingsAPI.createSettings(settings);
       console.log('Settings saved:', response.data);
       alert('Settings saved successfully!');
     } catch (err) {
       console.error('Error saving settings:', err);
+      setError('Failed to save settings');
       alert('Failed to save settings');
     } finally {
       setSaveLoading(false);
@@ -78,7 +83,7 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
           <SettingsIcon className="text-green-600" size={36} />
@@ -89,54 +94,55 @@ const SettingsPage = () => {
         </p>
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Delivery Configuration</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {deliveryFields.map(({ key, label, description }) => (
-            <div key={key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {label}
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={settings.delivery[key]}
-                onChange={(e) => handleInputChange('delivery', key, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder={description}
-              />
-              <p className="text-xs text-gray-500 mt-1">{description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-4 border-t">
-        <button
-          onClick={handleSave}
-          disabled={saveLoading || loading}
-          className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50"
-        >
-          {saveLoading ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-          {saveLoading ? 'Saving...' : 'Save Settings'}
-        </button>
-        <button
-          onClick={fetchSettings}
-          disabled={loading}
-          className="flex items-center gap-2 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-medium transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={18} />
-          Refresh
-        </button>
-      </div>
-
-      {loading && (
-        <div className="mt-4 text-center text-gray-500">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-          <p>Loading settings...</p>
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <p>{error}</p>
         </div>
       )}
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Delivery Configuration</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {deliveryFields.map(({ key, label, description }) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {label}
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={settings.delivery[key]}
+                  onChange={(e) => handleInputChange('delivery', key, e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder={description}
+                />
+                <p className="text-xs text-gray-500 mt-1">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t">
+          <button
+            onClick={handleSave}
+            disabled={saveLoading || loading}
+            className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50"
+          >
+            {saveLoading ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            {saveLoading ? 'Saving...' : 'Save Settings'}
+          </button>
+          <button
+            onClick={fetchSettings}
+            disabled={loading}
+            className="flex items-center gap-2 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-medium transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={18} />
+            Refresh
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
