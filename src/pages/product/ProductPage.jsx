@@ -215,15 +215,25 @@ async function handleAdd(formData) {
     if (!selectedProduct || !selectedLocationId) return;
     try {
       setLoading(true);
-      const payload = {
-        locations: [
+      
+      let locationsPayload;
+      if (selectedLocationId === 'all') {
+        locationsPayload = locations.map((location) => ({
+          locationId: location._id,
+          price: parseFloat(locationPrice) || selectedProduct.generalPrice,
+          stockQuantity: parseInt(locationStock) || selectedProduct.stockQuantity
+        }));
+      } else {
+        locationsPayload = [
           {
             locationId: selectedLocationId,
             price: parseFloat(locationPrice) || selectedProduct.generalPrice,
             stockQuantity: parseInt(locationStock) || selectedProduct.stockQuantity
           }
-        ]
-      };
+        ];
+      }
+      
+      const payload = { locations: locationsPayload };
       const response = await productsAPI.updateProductLocations(selectedProduct._id, payload);
       console.log('Update Product Locations Response:', response.data);
       // Refresh products list
@@ -372,7 +382,7 @@ async function handleDelete(product) {
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                   <MapPin className="text-blue-600" size={24} />
-                  Update Location for "{selectedProduct.name}"
+                  Update Location for NVSRICEMART
                 </h2>
 
                 <div className="space-y-4">
@@ -389,7 +399,7 @@ async function handleDelete(product) {
                       <option value="all">All Locations</option>
                       {locations.map((location) => (
                         <option key={location._id} value={location._id}>
-                          {location.zipcode}
+                          {location.name || location.city || location.zipcode}
                         </option>
                       ))}
                     </select>
@@ -429,7 +439,7 @@ async function handleDelete(product) {
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <p className="text-sm text-blue-800">
-                      ℹ️ Location update functionality is not yet implemented in the backend.
+                      ℹ️ "All Locations" will update price and stock for all locations at once.
                     </p>
                   </div>
 
