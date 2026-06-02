@@ -17,8 +17,9 @@ const ProductManagement = lazy(() => import("./pages/product/ProductPage"));
 const OrderHistory = lazy(() => import("./pages/orderhistroy/OrderHistory"));
 const Notification = lazy(() => import("./pages/notification/Notification"));
 const Offer = lazy(() => import("./pages/offer/Offer"));
-import Banner from './pages/banner/Banner';
-import LocationManagement from "./pages/location/LocationManagement";
+const Banner = lazy(() => import('./pages/banner/Banner'));
+const LocationManagement = lazy(() => import("./pages/location/LocationManagement"));
+const SettingsPage = lazy(() => import("./pages/settings/Settings"));
 
 function App() {
   return (
@@ -37,8 +38,9 @@ function App() {
               <Route path="/products" element={<ProductManagement />} />        
                <Route path="/banner" element={<Banner />} />
               <Route path="/orderhistory" element={<OrderHistory />} />
-                 <Route path="/locations" element={<LocationManagement />} />
-              <Route path="/offers" element={<Offer />} />
+<Route path="/locations" element={<LocationManagement />} />
+               <Route path="/settings" element={<SettingsPage />} />
+               <Route path="/offers" element={<Offer />} />
               <Route path="/notifications" element={<Notification />} />
             </Route>
 

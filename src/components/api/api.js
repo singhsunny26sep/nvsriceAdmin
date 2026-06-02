@@ -148,9 +148,13 @@ export const notificationsAPI = {
 // Settings API endpoints
 export const settingsAPI = {
   getSettings: () => api.get('/settings'),
-  updateSettings: (settings) => api.put('/settings', settings),
-  getSystemConfig: () => api.get('/settings/system'),
-  updateSystemConfig: (config) => api.put('/settings/system', config),
+  createSettings: (settingsData) => api.post('/settings/create', settingsData, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  getSettingsById: (id) => api.get(`/settings/${id}`),
+  updateSettings: (id, settingsData) => api.put(`/settings/${id}`, settingsData, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
 };
 
 // Support API endpoints
@@ -218,7 +222,5 @@ export const locationsAPI = {
   ),
   deleteLocation: (id) => api.delete(`/locations/delete/${id}`),
 };
-
-
 
 export default api;

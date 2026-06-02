@@ -42,7 +42,8 @@ const Sidebar = ({ isOpen, onClose }) => {
         { name: 'Products', href: '/products', icon: FileText },
         { name: 'Banner', href: '/banner', icon: FileText },
         { name: 'offers', href: '/offers', icon: FileText },
-        { name: 'Locations', href: '/locations', icon: FileText },
+        { name: 'Locations', href: '/locations', icon: MapPin },
+        { name: 'Settings', href: '/settings', icon: Settings },
         { name: 'Notifications', href: '/notifications', icon: FileText },
         { name: 'Order History', href: '/orderhistory', icon: FileText },
       ]
