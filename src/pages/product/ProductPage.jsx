@@ -399,7 +399,7 @@ async function handleDelete(product) {
                       <option value="all">All Locations</option>
                       {locations.map((location) => (
                         <option key={location._id} value={location._id}>
-                          {location.name || location.city || location.zipcode}
+                          {location.zipcode}
                         </option>
                       ))}
                     </select>

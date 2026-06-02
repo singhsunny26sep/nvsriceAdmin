@@ -1,52 +1,71 @@
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, MapPin, Navigation } from 'lucide-react';
-import { locationsAPI } from '../../components/api/api';
+import { useState, useEffect } from "react";
+import { Plus, Edit, Trash2, MapPin, Navigation } from "lucide-react";
+import { locationsAPI } from "../../components/api/api";
 
 // Location Form Component
-const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }) => {
+const LocationForm = ({
+  location,
+  onSave,
+  onCancel,
+  title = "Add New Location",
+}) => {
   const [formData, setFormData] = useState({
-    name: location?.name || '',
-    shopOrBuildingNumber: location?.shopOrBuildingNumber || '',
-    address: location?.address || '',
-    city: location?.city || '',
-    district: location?.district || '',
-    zipcode: location?.zipcode || '',
-    state: location?.state || '',
-    area: location?.area || '',
-    country: location?.country || 'India',
+    name: location?.name || "",
+    shopOrBuildingNumber: location?.shopOrBuildingNumber || "",
+    address: location?.address || "",
+    city: location?.city || "",
+    district: location?.district || "",
+    zipcode: location?.zipcode || "",
+    state: location?.state || "",
+    area: location?.area || "",
+    country: location?.country || "India",
     isProductAddress: location?.isProductAddress ?? false,
-    coordinates: location?.coordinates || ['', '']
+    coordinates: location?.coordinates || ["", ""],
   });
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleCoordinateChange = (index, value) => {
     const newCoordinates = [...formData.coordinates];
     newCoordinates[index] = value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      coordinates: newCoordinates
+      coordinates: newCoordinates,
     }));
   };
 
   const handleSubmit = () => {
-    const { name, shopOrBuildingNumber, address, city, district, zipcode, state, area, country, isProductAddress, coordinates } = formData;
+    const {
+      name,
+      shopOrBuildingNumber,
+      address,
+      city,
+      district,
+      zipcode,
+      state,
+      area,
+      country,
+      isProductAddress,
+      coordinates,
+    } = formData;
 
     if (!name || !address || !city || !state || !zipcode) {
-      alert("Please fill in all required fields: Name, Address, City, State, and ZIP Code");
+      alert(
+        "Please fill in all required fields: Name, Address, City, State, and ZIP Code",
+      );
       return;
     }
 
     const lat = coordinates[0];
     const lng = coordinates[1];
 
-    if (!lat || !lng || lat === '' || lng === '') {
+    if (!lat || !lng || lat === "" || lng === "") {
       alert("Please enter both latitude & longitude");
       return;
     }
@@ -80,7 +99,7 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
       area,
       country,
       isProductAddress,
-      coordinates: [latNum, lngNum]
+      coordinates: [latNum, lngNum],
     };
 
     onSave(payload, location?._id);
@@ -90,20 +109,20 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             coordinates: [
               position.coords.latitude.toString(),
-              position.coords.longitude.toString()
-            ]
+              position.coords.longitude.toString(),
+            ],
           }));
         },
         (error) => {
-          alert('Unable to get location: ' + error.message);
-        }
+          alert("Unable to get location: " + error.message);
+        },
       );
     } else {
-      alert('Geolocation is not supported by your browser');
+      alert("Geolocation is not supported by your browser");
     }
   };
 
@@ -269,8 +288,10 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
           </div>
 
           <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-            ℹ️ Format: <code>[latitude, longitude]</code> - Example: <code>[75.90, 22.45]</code>
-            <br/>Valid ranges: Latitude: -90 to 90, Longitude: -180 to 180
+            ℹ️ Format: <code>[latitude, longitude]</code> - Example:{" "}
+            <code>[75.90, 22.45]</code>
+            <br />
+            Valid ranges: Latitude: -90 to 90, Longitude: -180 to 180
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -310,7 +331,10 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
 
           {formData.coordinates[0] && formData.coordinates[1] && (
             <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-              <strong>Preview:</strong> <code>[{formData.coordinates[0]}, {formData.coordinates[1]}]</code>
+              <strong>Preview:</strong>{" "}
+              <code>
+                [{formData.coordinates[0]}, {formData.coordinates[1]}]
+              </code>
             </div>
           )}
         </div>
@@ -322,7 +346,7 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
             onClick={handleSubmit}
             className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium transition-colors"
           >
-            {location ? 'Update Location' : 'Add Location'}
+            {location ? "Update Location" : "Add Location"}
           </button>
           <button
             type="button"
@@ -374,7 +398,7 @@ const Table = ({ columns, data, actions, emptyMessage }) => {
               {columns.map((column) => (
                 <td
                   key={column.key}
-                  className={`px-6 py-4 ${column.className || ''}`}
+                  className={`px-6 py-4 ${column.className || ""}`}
                 >
                   {column.render
                     ? column.render(row[column.key], row)
@@ -410,8 +434,8 @@ const LocationManagement = () => {
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const [mode, setMode] = useState('view');
+
+  const [mode, setMode] = useState("view");
   const [editingLocation, setEditingLocation] = useState(null);
 
   useEffect(() => {
@@ -424,24 +448,24 @@ const LocationManagement = () => {
       setError(null);
 
       const locationsResponse = await locationsAPI.getAllLocations();
-      console.log('Locations API Response:', locationsResponse);
-      
-      let locationsData = locationsResponse?.data?.data?.data || 
-                         locationsResponse?.data?.data || 
-                         locationsResponse?.data || 
-                         [];
-      
+      console.log("Locations API Response:", locationsResponse);
+
+      let locationsData =
+        locationsResponse?.data?.data?.data ||
+        locationsResponse?.data?.data ||
+        locationsResponse?.data ||
+        [];
+
       if (!Array.isArray(locationsData)) {
-        console.warn('Locations data is not an array:', locationsData);
+        console.warn("Locations data is not an array:", locationsData);
         locationsData = [];
       }
-      console.log('Processed Locations:', locationsData);
+      console.log("Processed Locations:", locationsData);
       setLocations(locationsData);
-
     } catch (err) {
-      console.error('Error fetching data:', err);
-      console.error('Error details:', err.response?.data);
-      setError(err.message || 'Failed to fetch data');
+      console.error("Error fetching data:", err);
+      console.error("Error details:", err.response?.data);
+      setError(err.message || "Failed to fetch data");
     } finally {
       setLoading(false);
     }
@@ -449,98 +473,110 @@ const LocationManagement = () => {
 
   const columns = [
     {
-      key: 'name',
-      header: 'Location Name',
-      className: 'whitespace-nowrap font-semibold',
-      render: (name) => name || 'N/A'
+      key: "name",
+      header: "Location Name",
+      className: "whitespace-nowrap font-semibold",
+      render: (name) => name || "N/A",
     },
     {
-      key: 'shopOrBuildingNumber',
-      header: 'Shop/Bldg No.',
-      className: 'whitespace-nowrap text-gray-700',
-      render: (num) => num || 'N/A'
+      key: "shopOrBuildingNumber",
+      header: "Shop/Bldg No.",
+      className: "whitespace-nowrap text-gray-700",
+      render: (num) => num || "N/A",
     },
     {
-      key: 'address',
-      header: 'Address',
-      className: 'text-gray-700 max-w-xs truncate',
-      render: (address) => address || 'N/A'
+      key: "address",
+      header: "Address",
+      className: "text-gray-700 max-w-xs truncate",
+      render: (address) => address || "N/A",
     },
     {
-      key: 'area',
-      header: 'Area',
-      className: 'text-gray-700 max-w-xs truncate',
-      render: (area) => area || 'N/A'
+      key: "area",
+      header: "Area",
+      className: "text-gray-700 max-w-xs truncate",
+      render: (area) => area || "N/A",
     },
     {
-      key: 'city',
-      header: 'City',
-      className: 'whitespace-nowrap text-gray-600'
+      key: "city",
+      header: "City",
+      className: "whitespace-nowrap text-gray-600",
     },
     {
-      key: 'state',
-      header: 'State',
-      className: 'whitespace-nowrap text-gray-600'
+      key: "state",
+      header: "State",
+      className: "whitespace-nowrap text-gray-600",
     },
     {
-      key: 'zipcode',
-      header: 'ZIP',
-      className: 'whitespace-nowrap text-gray-600'
+      key: "zipcode",
+      header: "ZIP",
+      className: "whitespace-nowrap text-gray-600",
     },
     {
-      key: 'country',
-      header: 'Country',
-      className: 'whitespace-nowrap text-gray-600',
-      render: (country) => country || 'India'
+      key: "country",
+      header: "Country",
+      className: "whitespace-nowrap text-gray-600",
+      render: (country) => country || "India",
     },
     {
-      key: 'isProductAddress',
-      header: 'Product Address',
-      className: 'whitespace-nowrap text-gray-600',
-      render: (isProductAddress) => isProductAddress
-        ? <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Yes</span>
-        : <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">No</span>
+      key: "isProductAddress",
+      header: "Product Address",
+      className: "whitespace-nowrap text-gray-600",
+      render: (isProductAddress) =>
+        isProductAddress ? (
+          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+            Yes
+          </span>
+        ) : (
+          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+            No
+          </span>
+        ),
     },
     {
-      key: 'coordinates',
-      header: 'Coordinates',
-      className: 'whitespace-nowrap text-blue-600 text-sm',
-      render: (coords) => coords && coords.length === 2
-        ? `${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`
-        : 'N/A'
-    }
+      key: "coordinates",
+      header: "Coordinates",
+      className: "whitespace-nowrap text-blue-600 text-sm",
+      render: (coords) =>
+        coords && coords.length === 2
+          ? `${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`
+          : "N/A",
+    },
   ];
 
   const actions = [
     {
       icon: <Edit size={16} />,
       onClick: handleEdit,
-      className: 'text-green-600 hover:text-green-900 hover:bg-green-100',
-      title: 'Edit Location'
+      className: "text-green-600 hover:text-green-900 hover:bg-green-100",
+      title: "Edit Location",
     },
     {
       icon: <Trash2 size={16} />,
       onClick: handleDelete,
-      className: 'text-red-600 hover:text-red-900 hover:bg-red-100',
-      title: 'Delete Location'
-    }
+      className: "text-red-600 hover:text-red-900 hover:bg-red-100",
+      title: "Delete Location",
+    },
   ];
 
   async function handleAdd(formData) {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Creating location with payload:', formData);
+
+      console.log("Creating location with payload:", formData);
       const response = await locationsAPI.createLocation(formData);
-      console.log('Create Location Response:', response.data);
-      
+      console.log("Create Location Response:", response.data);
+
       await fetchAllData();
-      setMode('view');
+      setMode("view");
     } catch (err) {
-      console.error('Error creating location:', err);
-      console.error('Error response:', err.response?.data);
-      setError(err.response?.data?.message || err.message || 'Failed to create location');
+      console.error("Error creating location:", err);
+      console.error("Error response:", err.response?.data);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to create location",
+      );
     } finally {
       setLoading(false);
     }
@@ -548,44 +584,56 @@ const LocationManagement = () => {
 
   function handleEdit(location) {
     setEditingLocation(location);
-    setMode('edit');
+    setMode("edit");
   }
 
   async function handleUpdate(formData, locationId) {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Updating location with payload:', formData);
+
+      console.log("Updating location with payload:", formData);
       const response = await locationsAPI.updateLocation(locationId, formData);
-      console.log('Update Location Response:', response.data);
-      
+      console.log("Update Location Response:", response.data);
+
       await fetchAllData();
-      setMode('view');
+      setMode("view");
       setEditingLocation(null);
     } catch (err) {
-      console.error('Error updating location:', err);
-      console.error('Error response:', err.response?.data);
-      setError(err.response?.data?.message || err.message || 'Failed to update location');
+      console.error("Error updating location:", err);
+      console.error("Error response:", err.response?.data);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to update location",
+      );
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(location) {
-    if (window.confirm(`Are you sure you want to delete "${location.name || 'this location'}"?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${location.name || "this location"}"?`,
+      )
+    ) {
       try {
         setLoading(true);
         setError(null);
-        
+
         await locationsAPI.deleteLocation(location._id);
-        console.log('Location deleted successfully');
-        
+        console.log("Location deleted successfully");
+
         await fetchAllData();
       } catch (err) {
-        console.error('Error deleting location:', err);
-        console.error('Error response:', err.response?.data);
-        setError(err.response?.data?.message || err.message || 'Failed to delete location');
+        console.error("Error deleting location:", err);
+        console.error("Error response:", err.response?.data);
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to delete location",
+        );
       } finally {
         setLoading(false);
       }
@@ -593,13 +641,15 @@ const LocationManagement = () => {
   }
 
   function handleCancel() {
-    setMode('view');
+    setMode("view");
     setEditingLocation(null);
     setError(null);
   }
 
   const locationsArray = Array.isArray(locations) ? locations : [];
-  const coordinateCount = locationsArray.filter(loc => loc.coordinates && loc.coordinates.length === 2).length;
+  const coordinateCount = locationsArray.filter(
+    (loc) => loc.coordinates && loc.coordinates.length === 2,
+  ).length;
 
   if (loading && (!locations || locations.length === 0)) {
     return (
@@ -638,7 +688,7 @@ const LocationManagement = () => {
           </div>
         )}
 
-        {mode === 'add' && (
+        {mode === "add" && (
           <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="w-full max-w-2xl">
               <LocationForm
@@ -650,7 +700,7 @@ const LocationManagement = () => {
           </div>
         )}
 
-        {mode === 'edit' && editingLocation && (
+        {mode === "edit" && editingLocation && (
           <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="w-full max-w-2xl">
               <LocationForm
@@ -668,7 +718,9 @@ const LocationManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Locations</p>
-                <p className="text-2xl font-bold text-gray-800">{locationsArray.length}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {locationsArray.length}
+                </p>
               </div>
               <MapPin className="text-green-600" size={32} />
             </div>
@@ -677,17 +729,19 @@ const LocationManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">With Coordinates</p>
-                <p className="text-2xl font-bold text-blue-600">{coordinateCount}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {coordinateCount}
+                </p>
               </div>
               <span className="text-3xl">🗺️</span>
             </div>
           </div>
         </div>
 
-        {mode === 'view' && (
+        {mode === "view" && (
           <div className="mb-6">
             <button
-              onClick={() => setMode('add')}
+              onClick={() => setMode("add")}
               disabled={loading}
               className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
