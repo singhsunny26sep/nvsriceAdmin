@@ -5,8 +5,26 @@ import { locationsAPI } from '../../components/api/api';
 // Location Form Component
 const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }) => {
   const [formData, setFormData] = useState({
+    name: location?.name || '',
+    shopOrBuildingNumber: location?.shopOrBuildingNumber || '',
+    address: location?.address || '',
+    city: location?.city || '',
+    district: location?.district || '',
+    zipcode: location?.zipcode || '',
+    state: location?.state || '',
+    area: location?.area || '',
+    country: location?.country || 'India',
+    isProductAddress: location?.isProductAddress ?? false,
     coordinates: location?.coordinates || ['', '']
   });
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
 
   const handleCoordinateChange = (index, value) => {
     const newCoordinates = [...formData.coordinates];
@@ -18,26 +36,29 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
   };
 
   const handleSubmit = () => {
-    // Validate coordinates
-    const lat = formData.coordinates[0];
-    const lng = formData.coordinates[1];
-    
+    const { name, shopOrBuildingNumber, address, city, district, zipcode, state, area, country, isProductAddress, coordinates } = formData;
+
+    if (!name || !address || !city || !state || !zipcode) {
+      alert("Please fill in all required fields: Name, Address, City, State, and ZIP Code");
+      return;
+    }
+
+    const lat = coordinates[0];
+    const lng = coordinates[1];
+
     if (!lat || !lng || lat === '' || lng === '') {
       alert("Please enter both latitude & longitude");
       return;
     }
 
-    // Convert to numbers
     const latNum = parseFloat(lat);
     const lngNum = parseFloat(lng);
 
-    // Validate they are valid numbers
     if (isNaN(latNum) || isNaN(lngNum)) {
       alert("Please enter valid numbers for latitude and longitude");
       return;
     }
 
-    // Validate ranges
     if (latNum < -90 || latNum > 90) {
       alert("Latitude must be between -90 and 90");
       return;
@@ -48,23 +69,20 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
       return;
     }
 
-    // ONLY send coordinates array - NOTHING ELSE
     const payload = {
+      name,
+      shopOrBuildingNumber,
+      address,
+      city,
+      district,
+      zipcode,
+      state,
+      area,
+      country,
+      isProductAddress,
       coordinates: [latNum, lngNum]
     };
 
-    // Debug logging
-    console.log('=== PAYLOAD DEBUG ===');
-    console.log('Raw input - lat:', lat, 'lng:', lng);
-    console.log('Converted - lat:', latNum, 'lng:', lngNum);
-    console.log('Payload object:', payload);
-    console.log('Payload JSON:', JSON.stringify(payload));
-    console.log('Is coordinates an array?', Array.isArray(payload.coordinates));
-    console.log('Coordinates length:', payload.coordinates.length);
-    console.log('Coordinates[0] type:', typeof payload.coordinates[0]);
-    console.log('Coordinates[1] type:', typeof payload.coordinates[1]);
-    console.log('==================');
-    
     onSave(payload, location?._id);
   };
 
@@ -92,8 +110,150 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">{title}</h2>
-      
+
       <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Location Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="Main Shop"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Shop/Building Number
+            </label>
+            <input
+              type="text"
+              name="shopOrBuildingNumber"
+              value={formData.shopOrBuildingNumber}
+              onChange={handleInputChange}
+              placeholder="12A"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            placeholder="Near Market Road"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              City <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              placeholder="Davanagere"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              District
+            </label>
+            <input
+              type="text"
+              name="district"
+              value={formData.district}
+              onChange={handleInputChange}
+              placeholder="Davanagere"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              State <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleInputChange}
+              placeholder="Karnataka"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              ZIP Code <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="zipcode"
+              value={formData.zipcode}
+              onChange={handleInputChange}
+              placeholder="577007"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Country
+            </label>
+            <input
+              type="text"
+              name="country"
+              value={formData.country}
+              onChange={handleInputChange}
+              placeholder="India"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Area
+          </label>
+          <input
+            type="text"
+            name="area"
+            value={formData.area}
+            onChange={handleInputChange}
+            placeholder="davanagere taluku"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="isProductAddress"
+            checked={formData.isProductAddress}
+            onChange={handleInputChange}
+            className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+            id="isProductAddress"
+          />
+          <label htmlFor="isProductAddress" className="text-sm text-gray-700">
+            This is a product address
+          </label>
+        </div>
+
         {/* Coordinates Section */}
         <div className="border border-green-200 rounded-lg p-4 bg-green-50">
           <div className="flex justify-between items-center mb-3">
@@ -107,13 +267,12 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
               Get Current
             </button>
           </div>
-          
-          {/* Format Info */}
+
           <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-            ℹ️ Format: <code>[latitude, longitude]</code> - Example: <code>[44.4644, 65.9218]</code>
+            ℹ️ Format: <code>[latitude, longitude]</code> - Example: <code>[75.90, 22.45]</code>
             <br/>Valid ranges: Latitude: -90 to 90, Longitude: -180 to 180
           </div>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -126,7 +285,7 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
                 max="90"
                 value={formData.coordinates[0]}
                 onChange={(e) => handleCoordinateChange(0, e.target.value)}
-                placeholder="44.4644"
+                placeholder="75.90"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <span className="text-xs text-gray-500">Range: -90 to 90</span>
@@ -142,26 +301,18 @@ const LocationForm = ({ location, onSave, onCancel, title = "Add New Location" }
                 max="180"
                 value={formData.coordinates[1]}
                 onChange={(e) => handleCoordinateChange(1, e.target.value)}
-                placeholder="65.9218"
+                placeholder="22.45"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <span className="text-xs text-gray-500">Range: -180 to 180</span>
             </div>
           </div>
-          
-          {/* Current Values Preview */}
+
           {formData.coordinates[0] && formData.coordinates[1] && (
             <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
               <strong>Preview:</strong> <code>[{formData.coordinates[0]}, {formData.coordinates[1]}]</code>
             </div>
           )}
-        </div>
-
-        {/* Info Message */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            ℹ️ <strong>Only coordinates will be sent:</strong> <code>{`{ "coordinates": [lat, lng] }`}</code>
-          </p>
         </div>
 
         {/* Buttons */}
@@ -298,36 +449,28 @@ const LocationManagement = () => {
 
   const columns = [
     {
-      key: '_id',
-      header: 'ID',
-      className: 'whitespace-nowrap font-medium text-green-600',
-      render: (id) => id?.slice(-6) || 'N/A'
-    },
-    {
       key: 'name',
       header: 'Location Name',
       className: 'whitespace-nowrap font-semibold',
       render: (name) => name || 'N/A'
     },
     {
-      key: 'coordinates',
-      header: 'Coordinates',
-      className: 'whitespace-nowrap text-blue-600 text-sm',
-      render: (coords) => coords && coords.length === 2 
-        ? `${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`
-        : 'N/A'
+      key: 'shopOrBuildingNumber',
+      header: 'Shop/Bldg No.',
+      className: 'whitespace-nowrap text-gray-700',
+      render: (num) => num || 'N/A'
     },
     {
-      key: 'formattedAddress',
-      header: 'Adress',
-      className: 'whitespace-nowrap text-gray-600',
-      render: (num) => num || 'N/A'
+      key: 'address',
+      header: 'Address',
+      className: 'text-gray-700 max-w-xs truncate',
+      render: (address) => address || 'N/A'
     },
     {
       key: 'area',
       header: 'Area',
       className: 'text-gray-700 max-w-xs truncate',
-      render: (address) => address || 'N/A'
+      render: (area) => area || 'N/A'
     },
     {
       key: 'city',
@@ -343,6 +486,28 @@ const LocationManagement = () => {
       key: 'zipcode',
       header: 'ZIP',
       className: 'whitespace-nowrap text-gray-600'
+    },
+    {
+      key: 'country',
+      header: 'Country',
+      className: 'whitespace-nowrap text-gray-600',
+      render: (country) => country || 'India'
+    },
+    {
+      key: 'isProductAddress',
+      header: 'Product Address',
+      className: 'whitespace-nowrap text-gray-600',
+      render: (isProductAddress) => isProductAddress
+        ? <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Yes</span>
+        : <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">No</span>
+    },
+    {
+      key: 'coordinates',
+      header: 'Coordinates',
+      className: 'whitespace-nowrap text-blue-600 text-sm',
+      render: (coords) => coords && coords.length === 2
+        ? `${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`
+        : 'N/A'
     }
   ];
 
