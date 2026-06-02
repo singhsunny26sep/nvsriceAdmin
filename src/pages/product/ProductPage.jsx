@@ -386,6 +386,7 @@ async function handleDelete(product) {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select a location...</option>
+                      <option value="all">All Locations</option>
                       {locations.map((location) => (
                         <option key={location._id} value={location._id}>
                           {location.zipcode}
