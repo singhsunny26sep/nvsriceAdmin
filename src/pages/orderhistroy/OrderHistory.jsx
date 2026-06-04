@@ -21,8 +21,8 @@ const OrderDetailsModal = ({ order, onClose, onConfirm, onCancel, onComplete, on
     }
   };
 
-  // Check if order can be acted upon (only for Pending orders)
-  const canTakeAction = order.status === 'PENDING';
+  // Check if order can be acted upon (only for Pending and Confirmed orders)
+  const canTakeAction = order.status === 'PENDING' || order.status === 'CONFIRMED';
 
   // Format date
   const formatDate = (dateString) => {
@@ -177,34 +177,55 @@ const OrderDetailsModal = ({ order, onClose, onConfirm, onCancel, onComplete, on
         <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-between items-center">
           {canTakeAction ? (
             <div className="flex gap-3">
-              <button
-                onClick={() => onComplete(order)}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <CheckCircle size={18} />
-                Complete
-              </button>
-              <button
-                onClick={() => onPending(order)}
-                className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors"
-              >
-                <Clock size={18} />
-                Pending
-              </button>
-              <button
-                onClick={() => onConfirm(order)}
-                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-              >
-                <Check size={18} />
-                Confirm
-              </button>
-              <button
-                onClick={() => onCancel(order)}
-                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-              >
-                <X size={18} />
-                Cancel
-              </button>
+              {order.status === 'CONFIRMED' ? (
+                <>
+                  <button
+                    onClick={() => onComplete(order)}
+                    className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
+                  >
+                    <Package size={18} />
+                    Out for Delivery
+                  </button>
+                  <button
+                    onClick={() => onCancel(order)}
+                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    <X size={18} />
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => onComplete(order)}
+                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <CheckCircle size={18} />
+                    Complete
+                  </button>
+                  <button
+                    onClick={() => onPending(order)}
+                    className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors"
+                  >
+                    <Clock size={18} />
+                    Pending
+                  </button>
+                  <button
+                    onClick={() => onConfirm(order)}
+                    className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <Check size={18} />
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => onCancel(order)}
+                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    <X size={18} />
+                    Cancel
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="text-sm text-gray-500">
@@ -230,38 +251,38 @@ const OrderHistory = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
 
-// Fetch orders from API
-   const fetchOrders = async () => {
-      setLoading(true);
-      try {
-        const response = await ordersAPI.getOrders({ limit: 1000 });
-        console.log('Orders API Response:', response);
-        
-        let ordersData = [];
-        // Handle various API response structures
-        if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
-          ordersData = response.data.data.data;
-        } else if (response?.data?.data && Array.isArray(response.data.data)) {
-          ordersData = response.data.data;
-        } else if (Array.isArray(response?.data)) {
-          ordersData = response.data;
-        } else if (Array.isArray(response)) {
-          ordersData = response;
-        }
-        setOrders(ordersData);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('Failed to load orders. Please try again.');
-        setOrders([]);
-      } finally {
-        setLoading(false);
+  // Fetch orders from API
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await ordersAPI.getOrders({ limit: 1000 });
+      console.log('Orders API Response:', response);
+      
+      let ordersData = [];
+      // Handle various API response structures
+      if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
+        ordersData = response.data.data.data;
+      } else if (response?.data?.data && Array.isArray(response.data.data)) {
+        ordersData = response.data.data;
+      } else if (Array.isArray(response?.data)) {
+        ordersData = response.data;
+      } else if (Array.isArray(response)) {
+        ordersData = response;
       }
-    };
+      setOrders(ordersData);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('Failed to load orders. Please try again.');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-   useEffect(() => {
-     fetchOrders();
-   }, []);
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   // Map API response to component format
   const mapOrderData = (apiOrder) => {
@@ -486,69 +507,53 @@ const OrderHistory = () => {
     printWindow.document.close();
   }
 
-// Handle Confirm order
-   async function handleConfirm(order) {
-     try {
-       await ordersAPI.updateOrder(order.id || order._id, { status: 'CONFIRMED' });
-       setOrders(prevOrders => 
-         prevOrders.map(o => 
-           (o._id || o.id) === (order.id || order._id) ? { ...o, status: 'CONFIRMED' } : o
-         )
-       );
-       setSelectedOrder(null);
-     } catch (err) {
-       console.error('Error updating order status:', err);
-       alert('Failed to update order status. Please try again.');
-     }
-   }
+  // Handle Confirm order
+  async function handleConfirm(order) {
+    try {
+      await ordersAPI.updateOrder(order.id || order._id, { status: 'CONFIRMED' });
+      fetchOrders();
+      setSelectedOrder(null);
+    } catch (err) {
+      console.error('Error updating order status:', err);
+      alert('Failed to update order status. Please try again.');
+    }
+  }
 
-// Handle Cancel order
-   async function handleCancel(order) {
-     try {
-       await ordersAPI.updateOrder(order.id || order._id, { status: 'CANCELLED' });
-       setOrders(prevOrders => 
-         prevOrders.map(o => 
-           (o._id || o.id) === (order.id || order._id) ? { ...o, status: 'CANCELLED' } : o
-         )
-       );
-       setSelectedOrder(null);
-     } catch (err) {
-       console.error('Error updating order status:', err);
-       alert('Failed to update order status. Please try again.');
-     }
-   }
+  // Handle Cancel order
+  async function handleCancel(order) {
+    try {
+      await ordersAPI.updateOrder(order.id || order._id, { status: 'CANCELLED' });
+      fetchOrders();
+      setSelectedOrder(null);
+    } catch (err) {
+      console.error('Error updating order status:', err);
+      alert('Failed to update order status. Please try again.');
+    }
+  }
 
-   // Handle Complete order
-   async function handleComplete(order) {
-     try {
-       await ordersAPI.updateOrder(order.id || order._id, { status: 'DELIVERED' });
-       setOrders(prevOrders => 
-         prevOrders.map(o => 
-           (o._id || o.id) === (order.id || order._id) ? { ...o, status: 'DELIVERED' } : o
-         )
-       );
-       setSelectedOrder(null);
-     } catch (err) {
-       console.error('Error updating order status:', err);
-       alert('Failed to update order status. Please try again.');
-     }
-   }
+  // Handle Complete order
+  async function handleComplete(order) {
+    try {
+      await ordersAPI.updateOrder(order.id || order._id, { status: 'DELIVERED' });
+      fetchOrders();
+      setSelectedOrder(null);
+    } catch (err) {
+      console.error('Error updating order status:', err);
+      alert('Failed to update order status. Please try again.');
+    }
+  }
 
-   // Handle Pending order
-   async function handlePending(order) {
-     try {
-       await ordersAPI.updateOrder(order.id || order._id, { status: 'PENDING' });
-       setOrders(prevOrders => 
-         prevOrders.map(o => 
-           (o._id || o.id) === (order.id || order._id) ? { ...o, status: 'PENDING' } : o
-         )
-       );
-       setSelectedOrder(null);
-     } catch (err) {
-       console.error('Error updating order status:', err);
-       alert('Failed to update order status. Please try again.');
-     }
-   }
+  // Handle Pending order
+  async function handlePending(order) {
+    try {
+      await ordersAPI.updateOrder(order.id || order._id, { status: 'PENDING' });
+      fetchOrders();
+      setSelectedOrder(null);
+    } catch (err) {
+      console.error('Error updating order status:', err);
+      alert('Failed to update order status. Please try again.');
+    }
+  }
 
   // Filter orders based on status
   const filteredOrders = filterStatus === 'All' 
@@ -651,16 +656,16 @@ const OrderHistory = () => {
           ) : (
             <>
 <Table
-                 columns={columns}
-                 data={filteredOrders}
-                 actions={actions}
-                 emptyMessage="No orders found."
-               />
-             </>
-           )}
-         </div>
+                columns={columns}
+                data={filteredOrders}
+                actions={actions}
+                emptyMessage="No orders found."
+              />
+              </>
+            )}
+        </div>
 
-         {/* Order Details Modal */}
+        {/* Order Details Modal */}
         {selectedOrder && (
           <OrderDetailsModal
             order={selectedOrder}

@@ -27,7 +27,7 @@ const UsersPage = () => {
        });
        
        // Handle the actual API response structure
-       let usersData = [];
+       let usersData = [];    
        let total = 0;
        let totalPages = 1;
        
