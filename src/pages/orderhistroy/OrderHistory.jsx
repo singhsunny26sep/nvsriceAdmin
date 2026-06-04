@@ -250,14 +250,22 @@ const OrderHistory = () => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
 
   // Fetch orders from API
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await ordersAPI.getOrders({ limit: 1000 });
+      const params = {
+        page: currentPage,
+        limit: 10
+      };
+
+      const response = await ordersAPI.getOrders(params);
       console.log('Orders API Response:', response);
-      
+
       let ordersData = [];
       // Handle various API response structures
       if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
@@ -269,7 +277,14 @@ const OrderHistory = () => {
       } else if (Array.isArray(response)) {
         ordersData = response;
       }
+
+      // Extract pagination info
+      const ordersTotal = response?.data?.data?.total || 0;
+      const ordersTotalPages = response?.data?.data?.totalPages || 1;
+
       setOrders(ordersData);
+      setTotalOrders(ordersTotal);
+      setTotalPages(ordersTotalPages);
       setError(null);
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -282,7 +297,7 @@ const OrderHistory = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [currentPage]);
 
   // Map API response to component format
   const mapOrderData = (apiOrder) => {
@@ -561,7 +576,7 @@ const OrderHistory = () => {
     : mappedOrders.filter(order => order.status === filterStatus);
 
   // Calculate stats
-  const totalOrders = orders.length;
+  const statsTotalOrders = orders.length;
   const totalRevenue = orders.reduce((sum, order) => sum + (order.payableAmount || 0), 0);
   const deliveredOrders = orders.filter(order => order.status === 'DELIVERED').length;
   const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
@@ -586,7 +601,7 @@ const OrderHistory = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-800">{loading ? '...' : totalOrders}</p>
+                <p className="text-2xl font-bold text-gray-800">{loading ? '...' : statsTotalOrders}</p>
               </div>
               <ShoppingBag className="text-green-600" size={32} />
             </div>
@@ -641,10 +656,13 @@ const OrderHistory = () => {
 
         {/* Orders Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-800">
-              Orders ({loading ? '...' : filteredOrders.length})
+              Orders
             </h2>
+            <span className="text-sm text-gray-500">
+              Showing {filteredOrders.length} of {totalOrders} orders
+            </span>
           </div>
           
           {loading ? (
@@ -655,14 +673,41 @@ const OrderHistory = () => {
             <div className="p-8 text-center text-gray-500">No orders found.</div>
           ) : (
             <>
-<Table
+              <Table
                 columns={columns}
                 data={filteredOrders}
                 actions={actions}
                 emptyMessage="No orders found."
               />
-              </>
-            )}
+            </>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages} • Total: {totalOrders} orders
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Order Details Modal */}

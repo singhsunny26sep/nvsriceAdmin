@@ -11,7 +11,10 @@ const ProductManagement = () => {
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+
   const [mode, setMode] = useState('view');
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -19,65 +22,50 @@ const ProductManagement = () => {
   const [locationPrice, setLocationPrice] = useState('');
   const [locationStock, setLocationStock] = useState('');
 
-  // Fetch all data on component mount
+  // Fetch all data on component mount and when page changes
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [currentPage]);
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
       setError(null);
-// Fetch categories
-       const categoriesResponse = await categoriesAPI.getCategories({ limit: 1000 });
-      console.log('Categories API Response:', categoriesResponse);
-    
-      // Extract data from nested structure: response.data.data.data
+
+      // Fetch categories
+      const categoriesResponse = await categoriesAPI.getCategories({ limit: 1000 });
       let categoriesData = categoriesResponse?.data?.data?.data || [];
       if (!Array.isArray(categoriesData)) {
-        console.warn('Categories data is not an array:', categoriesData);
         categoriesData = [];
       }
-      console.log('Processed Categories:', categoriesData);
       setCategories(categoriesData);
 
-// Fetch subcategories
-       const subcategoriesResponse = await subcategoriesAPI.getSubcategories({ limit: 1000 });
-      console.log('Subcategories API Response:', subcategoriesResponse);
-      
-      // Extract data from nested structure: response.data.data.data
+      // Fetch subcategories
+      const subcategoriesResponse = await subcategoriesAPI.getSubcategories({ limit: 1000 });
       let subcategoriesData = subcategoriesResponse?.data?.data?.data || [];
       if (!Array.isArray(subcategoriesData)) {
-        console.warn('Subcategories data is not an array:', subcategoriesData);
         subcategoriesData = [];
       }
-      console.log('Processed Subcategories:', subcategoriesData);
       setSubcategories(subcategoriesData);
 
-// Fetch products
-       const productsResponse = await productsAPI.getProducts({ limit: 1000 });
-      console.log('Products API Response:', productsResponse);
-
-      // Extract data from nested structure: response.data.data.data
+      // Fetch products with pagination
+      const productsResponse = await productsAPI.getProducts({ page: currentPage, limit: 10 });
       let productsData = productsResponse?.data?.data?.data || [];
       if (!Array.isArray(productsData)) {
-        console.warn('Products data is not an array:', productsData);
         productsData = [];
       }
-      console.log('Processed Products:', productsData);
+      const productsTotal = productsResponse?.data?.data?.total || 0;
+      const productsTotalPages = productsResponse?.data?.data?.totalPages || 1;
       setProducts(productsData);
+      setTotalProducts(productsTotal);
+      setTotalPages(productsTotalPages);
 
-// Fetch locations
-       const locationsResponse = await locationsAPI.getAllLocations({ limit: 1000 });
-      console.log('Locations API Response:', locationsResponse);
-
-      // Extract data from nested structure: response.data.data.data
+      // Fetch locations
+      const locationsResponse = await locationsAPI.getAllLocations({ limit: 1000 });
       let locationsData = locationsResponse?.data?.data?.data || [];
       if (!Array.isArray(locationsData)) {
-        console.warn('Locations data is not an array:', locationsData);
         locationsData = [];
       }
-      console.log('Processed Locations:', locationsData);
       setLocations(locationsData);
 
     } catch (err) {
@@ -94,7 +82,7 @@ const ProductManagement = () => {
       key: '_id',
       header: 'ID',
       className: 'whitespace-nowrap font-medium text-green-600',
-      render: (id) => id.slice(-6) // Show last 6 characters of ID
+      render: (id) => id.slice(-6)
     },
     {
       key: 'image',
@@ -134,7 +122,6 @@ const ProductManagement = () => {
       render: (categoryId) => {
         const category = categories.find(c => c._id === categoryId);
         return category?.name || '';
-      
       }
     },
     {
@@ -189,16 +176,14 @@ const ProductManagement = () => {
     }
   ];
 
-async function handleAdd(formData) {
-     try {
-       setLoading(true);
-       const response = await productsAPI.createProduct(formData);
-       console.log('Create Product Response:', response.data);
-       
-       // Refresh products list
-       await fetchAllData();
-       setMode('view');
-     } catch (err) {
+  async function handleAdd(formData) {
+    try {
+      setLoading(true);
+      const response = await productsAPI.createProduct(formData);
+      console.log('Create Product Response:', response.data);
+      await fetchAllData();
+      setMode('view');
+    } catch (err) {
       console.error('Error creating product:', err);
       setError(err.message || 'Failed to create product');
     } finally {
@@ -215,7 +200,7 @@ async function handleAdd(formData) {
     if (!selectedProduct || !selectedLocationId) return;
     try {
       setLoading(true);
-      
+
       let locationsPayload;
       if (selectedLocationId === 'all') {
         locationsPayload = locations.map((location) => ({
@@ -232,11 +217,10 @@ async function handleAdd(formData) {
           }
         ];
       }
-      
+
       const payload = { locations: locationsPayload };
       const response = await productsAPI.updateProductLocations(selectedProduct._id, payload);
       console.log('Update Product Locations Response:', response.data);
-      // Refresh products list
       await fetchAllData();
       setMode('view');
       setSelectedProduct(null);
@@ -259,17 +243,15 @@ async function handleAdd(formData) {
     setMode('location');
   }
 
-async function handleUpdate(formData, productId) {
-     try {
-       setLoading(true);
-       const response = await productsAPI.updateProduct(productId, formData);
-       console.log('Update Product Response:', response.data);
-       
-       // Refresh products list
-       await fetchAllData();
-       setMode('view');
-       setEditingProduct(null);
-     } catch (err) {
+  async function handleUpdate(formData, productId) {
+    try {
+      setLoading(true);
+      const response = await productsAPI.updateProduct(productId, formData);
+      console.log('Update Product Response:', response.data);
+      await fetchAllData();
+      setMode('view');
+      setEditingProduct(null);
+    } catch (err) {
       console.error('Error updating product:', err);
       setError(err.message || 'Failed to update product');
     } finally {
@@ -277,16 +259,14 @@ async function handleUpdate(formData, productId) {
     }
   }
 
-async function handleDelete(product) {
-     if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
-       try {
-         setLoading(true);
-         await productsAPI.deleteProduct(product._id);
-         console.log('Product deleted successfully');
-         
-         // Refresh products list
-         await fetchAllData();
-       } catch (err) {
+  async function handleDelete(product) {
+    if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
+      try {
+        setLoading(true);
+        await productsAPI.deleteProduct(product._id);
+        console.log('Product deleted successfully');
+        await fetchAllData();
+      } catch (err) {
         console.error('Error deleting product:', err);
         setError(err.message || 'Failed to delete product');
       } finally {
@@ -309,7 +289,6 @@ async function handleDelete(product) {
   const lowStockCount = productsArray.filter(prod => prod.stockQuantity <= 10 && prod.stockQuantity > 0).length;
   const outOfStockCount = productsArray.filter(prod => prod.stockQuantity === 0).length;
 
-  // Loading state
   if (loading && (!products || products.length === 0)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -520,10 +499,13 @@ async function handleDelete(product) {
 
         {/* Products Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-800">
-              Rice Products ({productsArray.length})
+              Rice Products
             </h2>
+            <span className="text-sm text-gray-500">
+              Showing {productsArray.length} of {totalProducts} products
+            </span>
           </div>
           {loading && productsArray.length > 0 ? (
             <div className="p-8 text-center text-gray-500">
@@ -531,17 +513,44 @@ async function handleDelete(product) {
               <p>Updating...</p>
             </div>
           ) : (
-<Table
-               columns={columns}
-               data={productsArray}
-               actions={actions}
-               emptyMessage="No rice products found. Add your first product to get started!"
-             />
+            <Table
+              columns={columns}
+              data={productsArray}
+              actions={actions}
+              emptyMessage="No rice products found. Add your first product to get started!"
+            />
           )}
-</div>
-       </div>
-     </div>
-   );
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages} • Total: {totalProducts} products
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ProductManagement;
