@@ -11,93 +11,100 @@ const UsersPage = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, searchTerm, filterStatus]);
+  }, [currentPage]);
 
-   const fetchUsers = async () => {
-     try {
-       setLoading(true);
-       const response = await usersAPI.getUsers({
-         page: currentPage,
-         limit: 10,
-         search: searchTerm,
-         status: filterStatus === 'all' ? undefined : filterStatus
-       });
-       
-       // Handle the actual API response structure
-       let usersData = [];    
-       let total = 0;
-       let totalPages = 1;
-       
-       if (response.data.success) {
-         // Handle paginated response: { data: { total, totalPages, page, limit, data: [...] } }
-         if (response.data.data && response.data.data.data && Array.isArray(response.data.data.data)) {
-           usersData = response.data.data.data;
-           total = response.data.data.total || 0;
-           totalPages = response.data.data.totalPages || 1;
-         }
-         // Handle direct array response: { data: [...] }
-         else if (Array.isArray(response.data.data)) {
-           usersData = response.data.data;
-           total = usersData.length;
-           totalPages = 1;
-         }
-         // Handle single user response: { data: { _id, ... } }
-         else if (response.data.data && response.data.data._id) {
-           usersData = [response.data.data];
-           total = 1;
-           totalPages = 1;
-         }
-         // Handle alternative response formats
-         else if (response.data.users) {
-           usersData = response.data.users;
-           total = usersData.length;
-           totalPages = 1;
-         } else if (Array.isArray(response.data)) {
-           usersData = response.data;
-           total = usersData.length;
-           totalPages = 1;
-         }
-       }
-       
-       // Map API response to component format
-       const mappedUsers = usersData.map(user => ({
-         id: user._id || user.id,
-         name: user.name || 'N/A',
-         email: user.email || 'N/A',
-         phone: user.mobile || user.phone || 'N/A',
-         status: user.isActive ? 'active' : user.isDeleted ? 'deleted' : 'inactive',
-         role: user.role || 'user',
-         createdAt: user.createdAt,
-         isEmailVerified: user.isEmailVerified,
-         isMobileVerified: user.isMobileVerified,
-         isOnline: user.isOnline,
-         loginType: user.loginType,
-         lastActivity: user.lastActivity
-       }));
-       
-       setUsers(mappedUsers);
-       setTotalPages(totalPages);
-     } catch (error) {
-       console.error('Failed to fetch users:', error);
-       alert('Failed to load users. Please try again.');
-       setUsers([]);
-       setTotalPages(1);
-     } finally {
-       setLoading(false);
-     }
-   };
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: 10
+      };
+
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      if (filterStatus !== 'all') {
+        params.status = filterStatus;
+      }
+
+      const response = await usersAPI.getUsers(params);
+
+      let usersData = [];
+      let total = 0;
+      let pages = 1;
+
+      if (response.data.success) {
+        if (response.data.data && response.data.data.data && Array.isArray(response.data.data.data)) {
+          usersData = response.data.data.data;
+          total = response.data.data.total || 0;
+          pages = response.data.data.totalPages || 1;
+        } else if (Array.isArray(response.data.data)) {
+          usersData = response.data.data;
+          total = usersData.length;
+          pages = 1;
+        } else if (response.data.data && response.data.data._id) {
+          usersData = [response.data.data];
+          total = 1;
+          pages = 1;
+        } else if (response.data.users) {
+          usersData = response.data.users;
+          total = usersData.length;
+          pages = 1;
+        } else if (Array.isArray(response.data)) {
+          usersData = response.data;
+          total = usersData.length;
+          pages = 1;
+        }
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch users');
+      }
+
+      const mappedUsers = usersData.map(user => ({
+        id: user._id || user.id,
+        name: user.name || 'N/A',
+        email: user.email || 'N/A',
+        phone: user.mobile || user.phone || 'N/A',
+        status: user.isActive ? 'active' : user.isDeleted ? 'deleted' : 'inactive',
+        role: user.role || 'user',
+        createdAt: user.createdAt,
+        isEmailVerified: user.isEmailVerified,
+        isMobileVerified: user.isMobileVerified,
+        isOnline: user.isOnline,
+        loginType: user.loginType,
+        lastActivity: user.lastActivity
+      }));
+
+      setUsers(mappedUsers);
+      setTotalPages(pages);
+      setTotalUsers(total);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      alert('Failed to load users. Please try again.');
+      setUsers([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      await usersAPI.updateUser(userId, { 
+      await usersAPI.updateUser(userId, {
         isActive: newStatus === 'active',
         isDeleted: newStatus === 'deleted'
       });
       alert('User status updated successfully!');
-      fetchUsers(); // Refresh the list
+      fetchUsers();
     } catch (error) {
       console.error('Failed to update user status:', error);
       alert('Failed to update user status. Please try again.');
@@ -109,7 +116,7 @@ const UsersPage = () => {
       try {
         await usersAPI.deleteUser(userId);
         alert('User deleted successfully!');
-        fetchUsers(); // Refresh the list
+        fetchUsers();
       } catch (error) {
         console.error('Failed to delete user:', error);
         alert('Failed to delete user. Please try again.');
@@ -175,10 +182,10 @@ const UsersPage = () => {
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900">
-          {new Date(user.createdAt).toLocaleDateString()}
+          {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB') : 'N/A'}
         </div>
         <div className="text-xs text-gray-500">
-          {new Date(user.createdAt).toLocaleTimeString()}
+          {user.createdAt ? new Date(user.createdAt).toLocaleTimeString('en-GB') : ''}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -196,7 +203,7 @@ const UsersPage = () => {
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex items-center justify-end space-x-2">
-          <button 
+          <button
             className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
             title="View Details"
           >
@@ -204,13 +211,13 @@ const UsersPage = () => {
           </button>
           {hasPermission('manage_users') && (
             <>
-              <button 
+              <button
                 className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
                 title="Edit User"
               >
                 <Edit className="h-4 w-4" />
               </button>
-              <button 
+              <button
                 onClick={() => handleDeleteUser(user.id)}
                 className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                 title="Delete User"
@@ -219,7 +226,7 @@ const UsersPage = () => {
               </button>
             </>
           )}
-          <button 
+          <button
             className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-50"
             title="More Options"
           >
@@ -288,7 +295,7 @@ const UsersPage = () => {
           </div>
 
           <div className="text-sm text-gray-500">
-            {users.length} user{users.length !== 1 ? 's' : ''} found
+            Showing {users.length} of {totalUsers} user{totalUsers !== 1 ? 's' : ''} total
           </div>
         </div>
       </div>
@@ -348,7 +355,7 @@ const UsersPage = () => {
           <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Page {currentPage} of {totalPages}
+                Page {currentPage} of {totalPages} • Total: {totalUsers} users
               </div>
               <div className="flex space-x-2">
                 <button
