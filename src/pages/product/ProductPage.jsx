@@ -333,6 +333,7 @@ const ProductManagement = () => {
           <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="w-full max-w-2xl">
               <ProductForm
+                key={`add-${Date.now()}`}
                 onSave={handleAdd}
                 onCancel={handleCancel}
                 title="Add New Rice Product"
@@ -346,6 +347,7 @@ const ProductManagement = () => {
           <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="w-full max-w-2xl">
               <ProductForm
+                key={`edit-${editingProduct._id || editingProduct.id || Date.now()}`}
                 product={editingProduct}
                 onSave={handleUpdate}
                 onCancel={handleCancel}
