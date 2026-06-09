@@ -20,6 +20,7 @@ const Offer = lazy(() => import("./pages/offer/Offer"));
 const Banner = lazy(() => import('./pages/banner/Banner'));
 const LocationManagement = lazy(() => import("./pages/location/LocationManagement"));
 const SettingsPage = lazy(() => import("./pages/settings/Settings"));
+const WhatsAppBulk = lazy(() => import("./pages/whatsapp/WhatsAppBulk"));
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
                <Route path="/settings" element={<SettingsPage />} />
                <Route path="/offers" element={<Offer />} />
               <Route path="/notifications" element={<Notification />} />
+              <Route path="/whatsapp-bulk" element={<WhatsAppBulk />} />
             </Route>
 
             {/* 404 Fallback */}

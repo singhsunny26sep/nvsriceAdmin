@@ -581,293 +581,211 @@ const OrderHistory = () => {
       <head>
         <title>Invoice - ${order.orderNumber}</title>
         <style>
-          body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            padding: 20px;
+          @page {
+            size: 10cm 7.5cm;
             margin: 0;
+          }
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+          html, body {
+            width: 10cm;
+            height: 7.5cm;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            font-size: 6pt;
+            color: #000;
             background: white;
           }
           .invoice-container {
-            max-width: 800px;
-            margin: 0 auto;
+            width: 9.8cm;
+            height: 7.4cm;
+            padding: 0.15cm;
+            overflow: hidden;
             background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            padding: 30px;
           }
-          .invoice-header {
-            border-bottom: 3px solid #10b981;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-            text-align: center;
+          .row {
+            display: flex;
+            gap: 0.15cm;
+            margin-bottom: 0.1cm;
           }
-          .invoice-title {
+          .col {
+            flex: 1;
+          }
+          .section {
+            font-weight: bold;
+            font-size: 6.5pt;
             color: #10b981;
-            font-size: 28px;
+            border-bottom: 0.5px solid #10b981;
+            margin: 0.08cm 0 0.03cm 0;
+            padding-bottom: 1px;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 1px solid #10b981;
+            padding-bottom: 0.1cm;
+            margin-bottom: 0.1cm;
+          }
+          .header-title {
+            font-size: 9pt;
             font-weight: bold;
+            color: #10b981;
           }
-          .invoice-subtitle {
+          .header-sub {
+            font-size: 5pt;
             color: #6b7280;
-            font-size: 14px;
-            margin-top: 5px;
+            margin-top: 1px;
           }
-          .section-title {
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 25px;
-            margin-bottom: 15px;
-            color: #1f2937;
-            border-left: 4px solid #10b981;
-            padding-left: 12px;
-          }
-          .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
-          }
-          .info-item {
-            margin-bottom: 5px;
-          }
-          .label {
-            color: #6b7280;
-            font-size: 12px;
-            font-weight: 500;
-          }
-          .value {
-            color: #111827;
-            font-weight: 500;
-            font-size: 14px;
-            word-break: break-word;
-          }
-          .address-block {
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-          }
-          .items-table {
+          table.items {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            font-size: 5.5pt;
+            margin-top: 0.03cm;
           }
-          .items-table th {
-            background-color: #f3f4f6;
+          table.items th {
+            background: #f3f4f6;
+            padding: 1px 2px;
             text-align: left;
-            padding: 10px;
-            font-size: 13px;
+            border: 0.5px solid #ccc;
             font-weight: 600;
-            color: #374151;
-            border: 1px solid #e5e7eb;
           }
-          .items-table td {
-            padding: 10px;
-            border: 1px solid #e5e7eb;
-            font-size: 13px;
+          table.items td {
+            padding: 1px 2px;
+            border: 0.5px solid #ccc;
+            vertical-align: top;
           }
-          .total-row {
-            font-weight: bold;
-            background-color: #fefce8;
+          .totals {
+            width: 100%;
+            font-size: 6pt;
+            margin-top: 0.05cm;
           }
-          .total-row td {
-            border-top: 2px solid #10b981;
-          }
-          .text-right {
+          .totals td {
+            padding: 0px 2px;
             text-align: right;
           }
-          .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 12px;
-            color: #9ca3af;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 20px;
+          .grand {
+            font-weight: bold;
+            font-size: 7pt;
+            color: #10b981;
+          }
+          .footer-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 5pt;
+            color: #6b7280;
+            margin-top: 0.08cm;
+            border-top: 0.5px solid #ccc;
+            padding-top: 0.05cm;
           }
           .print-btn {
-            margin-top: 20px;
+            display: block;
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
             background: #10b981;
             color: white;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
+            z-index: 1000;
           }
           @media print {
             .print-btn { display: none; }
-            .invoice-container { box-shadow: none; padding: 0; }
-            body { padding: 0; }
+            html, body {
+              padding: 0;
+              margin: 0;
+              width: 10cm;
+              height: 7.5cm;
+              overflow: hidden;
+            }
+            .invoice-container {
+              padding: 0.15cm;
+              width: 9.8cm;
+              height: 7.4cm;
+              overflow: hidden;
+            }
           }
         </style>
       </head>
       <body>
         <div class="invoice-container">
-          <div class="invoice-header">
-            <div class="invoice-title">🍚 RICE DEAL</div>
-            <div class="invoice-subtitle">GSTIN: 29ABCDE1234F1Z5 | CIN: U12345KA2020PTC123456</div>
-            <div class="invoice-subtitle">#123, MG Road, Davangere, Karnataka - 577001 | Ph: 080-12345678</div>
-            <h3 style="margin: 10px 0 0 0;">TAX INVOICE</h3>
-            <p>Order #${order.orderNumber} | Date: ${order.orderDate}</p>
+          <div class="header">
+            <div class="header-title">🍚 NVS RICE MART</div>
+            <div class="header-sub">GSTIN: 29ABCDE1234F1Z5 | CIN: U12345KA2020PTC123456</div>
+            <div class="header-sub">#123, MG Road, Davangere, KA - 577001</div>
+            <div style="font-weight:bold; font-size:6.5pt; margin-top:1px;">TAX INVOICE</div>
+            <div style="font-size:5.5pt;">#${order.orderNumber} | ${order.orderDate}</div>
           </div>
           
-          <!-- Customer Section -->
-          <div class="section-title">👤 CUSTOMER DETAILS</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="label">Mobile Number</div>
-              <div class="value">${order.customerName || 'N/A'}</div>
+          <div class="row">
+            <div class="col">
+              <div class="section">CUSTOMER</div>
+              <div style="font-size:5.5pt;"><b>Mobile:</b> ${order.customerName || 'N/A'}</div>
+              <div style="font-size:5.5pt;"><b>User:</b> ${apiOrder.user?._id?.substring(0,12) || 'N/A'}</div>
             </div>
-            <div class="info-item">
-              <div class="label">User ID</div>
-              <div class="value">${apiOrder.user?._id?.substring(0,12) || 'N/A'}...</div>
-            </div>
-          </div>
-          
-          <!-- Delivery Location - FULL DETAILS -->
-          <div class="section-title">📍 DELIVERY LOCATION</div>
-          <div class="address-block">
-            <div class="info-grid">
-              <div class="info-item">
-                <div class="label">Recipient Name</div>
-                <div class="value">${deliveryLoc.name || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">Shop/Building No.</div>
-                <div class="value">${deliveryLoc.shopOrBuildingNumber || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">Address Line</div>
-                <div class="value">${deliveryLoc.address || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">Area / Locality</div>
-                <div class="value">${deliveryLoc.area || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">City</div>
-                <div class="value">${deliveryLoc.city || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">District</div>
-                <div class="value">${deliveryLoc.district || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">State</div>
-                <div class="value">${deliveryLoc.state || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">PIN Code (Zipcode)</div>
-                <div class="value">${deliveryLoc.zipcode || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">Coordinates (Lat, Lon)</div>
-                <div class="value">${coordinates}</div>
-              </div>
-              <div class="info-item">
-                <div class="label">Distance from Store</div>
-                <div class="value">${apiOrder.distanceKm ? apiOrder.distanceKm.toFixed(2) + ' km' : 'N/A'}</div>
-              </div>
-            </div>
-            <div style="margin-top: 10px;">
-              <div class="label">Formatted Full Address</div>
-              <div class="value">${deliveryLoc.formattedAddress || deliveryLoc.address || 'N/A'}</div>
+            <div class="col">
+              <div class="section">ADDRESS</div>
+              <div style="font-size:5.5pt;"><b>${deliveryLoc.name || 'N/A'}</b></div>
+              <div style="font-size:5.5pt;">${deliveryLoc.shopOrBuildingNumber || ''} ${deliveryLoc.area || ''}</div>
+              <div style="font-size:5.5pt;">${deliveryLoc.city || ''} - ${deliveryLoc.zipcode || ''}</div>
             </div>
           </div>
           
-          <!-- Order Items -->
-          <div class="section-title">🛒 ORDER ITEMS</div>
-          <table class="items-table">
+          <div class="section">ITEMS</div>
+          <table class="items">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Item Name / Brand</th>
-                <th>Weight</th>
-                <th>Qty</th>
-                <th>Unit Price</th>
-                <th>Total</th>
+                <th style="width:5%">#</th>
+                <th style="width:45%">Item</th>
+                <th style="width:10%">Qty</th>
+                <th style="width:20%">Price</th>
+                <th style="width:20%; text-align:right;">Total</th>
               </tr>
             </thead>
             <tbody>
               ${order.items && order.items.length > 0 ? order.items.map((item, idx) => `
                 <tr>
                   <td>${idx+1}</td>
-                  <td>
-                    ${item.product?.name || 'Unknown'}<br>
-                    <small style="color:#6b7280">${item.product?.brand || ''}</small>
-                    ${item.product?.SKU ? `<br><small>SKU: ${item.product.SKU}</small>` : ''}
-                  </td>
-                  <td>${item.product?.weightInKg ? item.product.weightInKg + ' kg' : '-'}</td>
+                  <td>${(item.product?.name || 'Unknown').substring(0, 22)}</td>
                   <td>${item.quantity}</td>
                   <td>₹${(item.price || 0).toFixed(2)}</td>
-                  <td class="text-right">₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+                  <td style="text-align:right;">₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
                 </tr>
-              `).join('') : '<tr><td colspan="6" style="text-align:center">No items</td></tr>'}
+              `).join('') : '<tr><td colspan="5" style="text-align:center">No items</td></tr>'}
             </tbody>
           </table>
           
-          <!-- Totals -->
-          <table style="width: 100%; margin-top: 20px;">
+          <table class="totals">
             <tr>
-              <td style="text-align: right; padding: 5px;"><strong>Sub Total:</strong></td>
-              <td style="text-align: right; padding: 5px; width: 120px;">₹${(order.subTotal || 0).toFixed(2)}</td>
+              <td style="text-align:right;"><b>Subtotal:</b></td>
+              <td style="width:70px;">₹${(order.subTotal || 0).toFixed(2)}</td>
             </tr>
             <tr>
-              <td style="text-align: right; padding: 5px;"><strong>Delivery Charge:</strong></td>
-              <td style="text-align: right; padding: 5px;">₹${(order.deliveryCharge || 0).toFixed(2)}</td>
+              <td style="text-align:right;"><b>Delivery:</b></td>
+              <td>₹${(order.deliveryCharge || 0).toFixed(2)}</td>
             </tr>
-            <tr style="border-top: 1px solid #e5e7eb;">
-              <td style="text-align: right; padding: 10px 5px;"><strong>GRAND TOTAL:</strong></td>
-              <td style="text-align: right; padding: 10px 5px;"><strong style="color:#10b981; font-size:18px;">₹${(order.totalAmount || 0).toFixed(2)}</strong></td>
+            <tr style="border-top:0.5px solid #10b981;">
+              <td style="text-align:right;"><b class="grand">TOTAL:</b></td>
+              <td class="grand">₹${(order.totalAmount || order.payableAmount || 0).toFixed(2)}</td>
             </tr>
           </table>
           
-          <!-- Payment Info -->
-          <div class="section-title">💳 PAYMENT DETAILS</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="label">Payment Method</div>
-              <div class="value">${order.paymentMethod || 'COD'}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">Payment Status</div>
-              <div class="value">${order.paymentStatus || 'NOT_REQUIRED'}</div>
-            </div>
+          <div class="footer-row">
+            <div><b>Method:</b> ${order.paymentMethod || 'COD'} | <b>Status:</b> ${order.paymentStatus || 'NOT_REQUIRED'}</div>
+            <div><b>ID:</b> ${apiOrder._id?.substring(0,10) || order.id || 'N/A'}</div>
           </div>
-          
-          <!-- Order Metadata -->
-          <div class="section-title">📋 ORDER METADATA</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="label">Order ID (MongoDB)</div>
-              <div class="value" style="font-size:11px;">${apiOrder._id || order.id || 'N/A'}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">Cart ID</div>
-              <div class="value" style="font-size:11px;">${apiOrder.cartId || 'N/A'}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">Created At</div>
-              <div class="value">${order.orderDate}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">Last Updated</div>
-              <div class="value">${apiOrder.updatedAt ? new Date(apiOrder.updatedAt).toLocaleString() : 'N/A'}</div>
-            </div>
-          </div>
-          
-          <div class="footer">
-            <p>Thank you for shopping with Rice Deal! This is a computer generated invoice.</p>
-            <p>For any queries, contact support@ricedeal.com | +91 9876543210</p>
-          </div>
-          
-          <button class="print-btn" onclick="window.print()">🖨️ Print Invoice</button>
         </div>
+        <button class="print-btn" onclick="window.print()">🖨️ Print Invoice</button>
         <script>
-          window.onload = function() { 
-            // Auto-print after a short delay to allow rendering
-            setTimeout(() => window.print(), 500);
-          }
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
         </script>
       </body>
       </html>
@@ -949,7 +867,7 @@ const OrderHistory = () => {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
             <ShoppingBag className="text-green-600" size={36} />
-            🍚 Rice Deal - Order History
+            🍚 NVS RICE MART - Order History
           </h1>
           <p className="text-gray-600">
             Track and manage all customer orders

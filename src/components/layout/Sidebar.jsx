@@ -9,7 +9,8 @@ import {
   Headphones, 
   FileText,
   X,
-  Activity
+  Activity,
+  MessageSquare
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -45,6 +46,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { name: 'Locations', href: '/locations', icon: MapPin },
         { name: 'Settings', href: '/settings', icon: Settings },
         { name: 'Notifications', href: '/notifications', icon: FileText },
+        { name: 'WhatsApp Bulk', href: '/whatsapp-bulk', icon: MessageSquare },
         { name: 'Order History', href: '/orderhistory', icon: FileText },
       ]
     };
