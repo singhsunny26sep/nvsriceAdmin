@@ -216,7 +216,7 @@ export const locationsAPI = {
   createLocation: (locationData) =>
     api.post("/locations/create", locationData, {
       headers: {
-        "Content-Type": "application/json", // ✅ IMPORTANT: Must be JSON
+        "Content-Type": "application/json",
       },
     }),
   getAllLocations: () => api.get("/locations/getAll?isProductAddress=true"),
@@ -224,10 +224,25 @@ export const locationsAPI = {
   updateLocation: (id, locationData) =>
     api.put(`/locations/${id}`, locationData, {
       headers: {
-        "Content-Type": "application/json", // ✅ IMPORTANT: Must be JSON
+        "Content-Type": "application/json",
       },
     }),
   deleteLocation: (id) => api.delete(`/locations/delete/${id}`),
+};
+
+// WhatsApp API endpoints
+export const whatsappAPI = {
+  getTemplates: () => api.get("/whatsapp/templates"),
+  getTemplateById: (id) => api.get(`/whatsapp/templates/${id}`),
+  createTemplate: (templateData) =>
+    api.post("/whatsapp/templates", templateData),
+  updateTemplate: (id, templateData) =>
+    api.put(`/whatsapp/templates/${id}`, templateData),
+  deleteTemplate: (id) => api.delete(`/whatsapp/templates/${id}`),
+
+  sendBulkMessage: (data) => api.post("/whatsapp/send-bulk", data),
+  getMessageHistory: (params) => api.get("/whatsapp/history", { params }),
+  getMessageStats: () => api.get("/whatsapp/stats"),
 };
 
 export default api;

@@ -384,6 +384,9 @@ const OrderHistory = () => {
         page: currentPage,
         limit: 10
       };
+      if (filterStatus !== 'All') {
+        params.status = filterStatus;
+      }
 
       const response = await ordersAPI.getOrders(params);
       console.log('Orders API Response:', response);
@@ -419,7 +422,11 @@ const OrderHistory = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [currentPage]);
+  }, [currentPage, filterStatus]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus]);
 
   // Map API response to component format
   const mapOrderData = (apiOrder) => {
