@@ -372,6 +372,7 @@ const OrderHistory = () => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
+  const [selectedMonth, setSelectedMonth] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -386,6 +387,9 @@ const OrderHistory = () => {
       };
       if (filterStatus !== 'All') {
         params.status = filterStatus;
+      }
+      if (selectedMonth !== 'all') {
+        params.month = selectedMonth;
       }
 
       const response = await ordersAPI.getOrders(params);
@@ -426,7 +430,7 @@ const OrderHistory = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus]);
+  }, [filterStatus, selectedMonth]);
 
   // Map API response to component format
   const mapOrderData = (apiOrder) => {
@@ -853,12 +857,12 @@ const OrderHistory = () => {
     ? mappedOrders 
     : mappedOrders.filter(order => order.status === filterStatus);
 
-  // Calculate stats
-  const statsTotalOrders = orders.length;
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.payableAmount || 0), 0);
-  const deliveredOrders = orders.filter(order => order.status === 'DELIVERED').length;
-  const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
-  const cancelledOrders = orders.filter(order => order.status === 'CANCELLED').length;
+  // Calculate stats based on filtered orders
+  const statsTotalOrders = filteredOrders.length;
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  const deliveredOrders = filteredOrders.filter(order => order.status === 'DELIVERED').length;
+  const pendingOrders = filteredOrders.filter(order => order.status === 'PENDING').length;
+  const cancelledOrders = filteredOrders.filter(order => order.status === 'CANCELLED').length;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -880,7 +884,7 @@ const OrderHistory = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-800">{loading ? '...' : statsTotalOrders}</p>
+                <p className="text-2xl font-bold text-gray-800">{loading ? '...' : totalOrders}</p>
               </div>
               <ShoppingBag className="text-green-600" size={32} />
             </div>
@@ -923,7 +927,33 @@ const OrderHistory = () => {
           </div>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Month Filter */}
+         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 p-4">
+           <div className="flex items-center gap-4">
+             <label className="text-sm font-medium text-gray-700">Month:</label>
+             <select
+               value={selectedMonth}
+               onChange={(e) => setSelectedMonth(e.target.value)}
+               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+             >
+               <option value="all">All Months</option>
+               <option value="1">January</option>
+               <option value="2">February</option>
+               <option value="3">March</option>
+               <option value="4">April</option>
+               <option value="5">May</option>
+               <option value="6">June</option>
+               <option value="7">July</option>
+               <option value="8">August</option>
+               <option value="9">September</option>
+               <option value="10">October</option>
+               <option value="11">November</option>
+               <option value="12">December</option>
+             </select>
+           </div>
+         </div>
+
+         {/* Filter Tabs */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 p-4">
           <div className="flex flex-wrap gap-2">
             {['All', 'INITIATED', 'PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED'].map((status) => (
