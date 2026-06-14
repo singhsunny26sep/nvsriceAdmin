@@ -376,45 +376,102 @@ const OrderHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [orderStats, setOrderStats] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    deliveredOrders: 0,
+    pendingOrders: 0,
+    cancelledOrders: 0,
+  });
+
+  const getOrdersParams = (page, limit = 10) => {
+    const params = {
+      page,
+      limit
+    };
+    if (filterStatus !== 'All') {
+      params.status = filterStatus;
+    }
+    if (selectedMonth !== 'all') {
+      params.month = selectedMonth;
+    }
+    return params;
+  };
+
+  const parseOrdersResponse = (response) => {
+    let ordersData = [];
+    if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
+      ordersData = response.data.data.data;
+    } else if (response?.data?.data && Array.isArray(response.data.data)) {
+      ordersData = response.data.data;
+    } else if (Array.isArray(response?.data)) {
+      ordersData = response.data;
+    } else if (Array.isArray(response)) {
+      ordersData = response;
+    }
+
+    return {
+      orders: ordersData,
+      total: response?.data?.data?.total ?? response?.data?.total ?? ordersData.length,
+      totalPages: response?.data?.data?.totalPages ?? response?.data?.totalPages ?? 1
+    };
+  };
+
+  const fetchOrdersPage = async (page, limit = 10) => {
+    const response = await ordersAPI.getOrders(getOrdersParams(page, limit));
+    console.log('Orders API Response:', response);
+    return parseOrdersResponse(response);
+  };
+
+  const calculateStatsFromOrders = (ordersList, totalOrdersCount) => ({
+    totalOrders: totalOrdersCount,
+    totalRevenue: ordersList.reduce((sum, order) => sum + (order.payableAmount || order.totalAmount || 0), 0),
+    deliveredOrders: ordersList.filter(order => order.status === 'DELIVERED').length,
+    pendingOrders: ordersList.filter(order => order.status === 'PENDING').length,
+    cancelledOrders: ordersList.filter(order => order.status === 'CANCELLED').length,
+  });
+
+  const calculateOrderStats = async (firstPageData) => {
+    const allOrders = [];
+    const totalPagesToFetch = Math.max(1, firstPageData.totalPages || 1);
+
+    for (let page = 1; page <= totalPagesToFetch; page += 1) {
+      const pageData = page === firstPageData.page ? firstPageData : await fetchOrdersPage(page);
+      allOrders.push(...pageData.orders);
+    }
+
+    const stats = calculateStatsFromOrders(allOrders, firstPageData.total);
+
+    if (filterStatus === 'DELIVERED') {
+      stats.deliveredOrders = firstPageData.total;
+    } else if (filterStatus === 'PENDING') {
+      stats.pendingOrders = firstPageData.total;
+    } else if (filterStatus === 'CANCELLED') {
+      stats.cancelledOrders = firstPageData.total;
+    }
+
+    return stats;
+  };
 
   // Fetch orders from API
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const params = {
-        page: currentPage,
-        limit: 10
-      };
-      if (filterStatus !== 'All') {
-        params.status = filterStatus;
-      }
-      if (selectedMonth !== 'all') {
-        params.month = selectedMonth;
-      }
-
-      const response = await ordersAPI.getOrders(params);
-      console.log('Orders API Response:', response);
-
-      let ordersData = [];
-      // Handle various API response structures
-      if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
-        ordersData = response.data.data.data;
-      } else if (response?.data?.data && Array.isArray(response.data.data)) {
-        ordersData = response.data.data;
-      } else if (Array.isArray(response?.data)) {
-        ordersData = response.data;
-      } else if (Array.isArray(response)) {
-        ordersData = response;
-      }
-
-      // Extract pagination info
-      const ordersTotal = response?.data?.data?.total || ordersData.length;
-      const ordersTotalPages = response?.data?.data?.totalPages || 1;
+      const currentPageData = await fetchOrdersPage(currentPage);
+      const ordersData = currentPageData.orders;
 
       setOrders(ordersData);
-      setTotalOrders(ordersTotal);
-      setTotalPages(ordersTotalPages);
+      setTotalOrders(currentPageData.total);
+      setTotalPages(currentPageData.totalPages);
       setError(null);
+
+      try {
+        const stats = await calculateOrderStats(currentPageData);
+        setOrderStats(stats);
+      } catch (statsErr) {
+        console.error('Error calculating order stats:', statsErr);
+        setOrderStats(calculateStatsFromOrders(ordersData, currentPageData.total));
+      }
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError('Failed to load orders. Please try again.');
@@ -426,11 +483,7 @@ const OrderHistory = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [currentPage, filterStatus]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterStatus, selectedMonth]);
+  }, [currentPage, filterStatus, selectedMonth]);
 
   // Map API response to component format
   const mapOrderData = (apiOrder) => {
@@ -857,12 +910,11 @@ const OrderHistory = () => {
     ? mappedOrders 
     : mappedOrders.filter(order => order.status === filterStatus);
 
-  // Calculate stats based on filtered orders
-  const statsTotalOrders = filteredOrders.length;
-  const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-  const deliveredOrders = filteredOrders.filter(order => order.status === 'DELIVERED').length;
-  const pendingOrders = filteredOrders.filter(order => order.status === 'PENDING').length;
-  const cancelledOrders = filteredOrders.filter(order => order.status === 'CANCELLED').length;
+  // Calculate stats from all matching orders
+  const totalRevenue = orderStats.totalRevenue;
+  const deliveredOrders = orderStats.deliveredOrders;
+  const pendingOrders = orderStats.pendingOrders;
+  const cancelledOrders = orderStats.cancelledOrders;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -884,7 +936,7 @@ const OrderHistory = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-800">{loading ? '...' : totalOrders}</p>
+                <p className="text-2xl font-bold text-gray-800">{loading ? '...' : orderStats.totalOrders}</p>
               </div>
               <ShoppingBag className="text-green-600" size={32} />
             </div>
@@ -933,7 +985,10 @@ const OrderHistory = () => {
              <label className="text-sm font-medium text-gray-700">Month:</label>
              <select
                value={selectedMonth}
-               onChange={(e) => setSelectedMonth(e.target.value)}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setCurrentPage(1);
+                }}
                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
              >
                <option value="all">All Months</option>
@@ -959,7 +1014,10 @@ const OrderHistory = () => {
             {['All', 'INITIATED', 'PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED'].map((status) => (
               <button
                 key={status}
-                onClick={() => setFilterStatus(status)}
+                onClick={() => {
+                  setFilterStatus(status);
+                  setCurrentPage(1);
+                }}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   filterStatus === status
                     ? 'bg-green-600 text-white'
