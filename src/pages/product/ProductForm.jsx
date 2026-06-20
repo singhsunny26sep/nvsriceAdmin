@@ -170,7 +170,7 @@ const ProductForm = ({
       console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
     }
 
-    onSave(formDataToSend, isEditing ? product.id : null);
+    onSave(formDataToSend, isEditing ? (product._id || product.id) : null);
   };
 
   return (
