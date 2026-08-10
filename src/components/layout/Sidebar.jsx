@@ -10,7 +10,8 @@ import {
   FileText,
   X,
   Activity,
-  MessageSquare
+  MessageSquare,
+  UserPlus
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -22,6 +23,10 @@ const Sidebar = ({ isOpen, onClose }) => {
       { name: 'Dashboard', href: '/dashboard', icon: Home },
       { name: 'Customers', href: '/users', icon: Users },
       { name: 'Categories', href: '/category', icon: Settings },
+      { name: 'Vendor Register', href: '/vendor-register', icon: UserPlus },
+      { name: 'Locations', href: '/locations', icon: MapPin },
+      { name: 'Location Mgmt', href: '/location-management', icon: MapPin },
+      
     ];
 
     const roleBasedItems = {
@@ -38,12 +43,11 @@ const Sidebar = ({ isOpen, onClose }) => {
         { name: 'Zone Management', href: '/zone-management', icon: MapPin },
         { name: 'Reports', href: '/reports', icon: FileText },
       ],
-      support_admin: [
+       support_admin: [
         { name: 'Sub Categories', href: '/subcategories', icon: Headphones },
         { name: 'Products', href: '/products', icon: FileText },
         { name: 'Banner', href: '/banner', icon: FileText },
         { name: 'offers', href: '/offers', icon: FileText },
-        { name: 'Locations', href: '/locations', icon: MapPin },
         { name: 'Settings', href: '/settings', icon: Settings },
         { name: 'Notifications', href: '/notifications', icon: FileText },
         { name: 'WhatsApp Bulk', href: '/whatsapp-bulk', icon: MessageSquare },
