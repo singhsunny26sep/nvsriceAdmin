@@ -7,6 +7,7 @@ import "./App.css";
 
 // Lazy imports
 const LoginPage = lazy(() => import("./pages/LoginPage"));
+const VendorRegister = lazy(() => import("./pages/VendorRegister"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const UsersPage = lazy(() => import("./pages/UsersPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
@@ -19,6 +20,7 @@ const Notification = lazy(() => import("./pages/notification/Notification"));
 const Offer = lazy(() => import("./pages/offer/Offer"));
 const Banner = lazy(() => import('./pages/banner/Banner'));
 const LocationManagement = lazy(() => import("./pages/location/LocationManagement"));
+const Locations = lazy(() => import("./pages/Locations"));
 const SettingsPage = lazy(() => import("./pages/settings/Settings"));
 const WhatsAppBulk = lazy(() => import("./pages/whatsapp/WhatsAppBulk"));
 
@@ -33,13 +35,15 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/vendor-register" element={<VendorRegister />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/category" element={<CategoryManagement />} />
               <Route path="/subcategories" element={<SubCategoryManagement />} />
               <Route path="/products" element={<ProductManagement />} />        
                <Route path="/banner" element={<Banner />} />
               <Route path="/orderhistory" element={<OrderHistory />} />
-<Route path="/locations" element={<LocationManagement />} />
+              <Route path="/locations" element={<Locations />} />
+              <Route path="/location-management" element={<LocationManagement />} />
                <Route path="/settings" element={<SettingsPage />} />
                <Route path="/offers" element={<Offer />} />
               <Route path="/notifications" element={<Notification />} />
